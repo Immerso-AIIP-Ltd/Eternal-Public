@@ -1,0 +1,156 @@
+.splash-bg {
+  min-height: 100vh;
+  /* background: linear-gradient(135deg, #1a1446 0%, #4b2067 100%); */
+  background: #ffffff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Chakra animation styles */
+.chakra-stack {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  z-index: 1;
+}
+
+.chakra-orb {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  box-shadow: 0 0 24px 8px rgba(0,0,0,0.12);
+  opacity: 0.85;
+  animation: chakra-pulse 2.5s infinite alternate;
+}
+
+.chakra-orb.chakra-1 { background: radial-gradient(circle, #ff2d55 60%, #ffb3b3 100%); box-shadow: 0 0 32px 8px #ff2d55aa; animation-delay: 0s; }
+.chakra-orb.chakra-2 { background: radial-gradient(circle, #ff9500 60%, #ffe0b3 100%); box-shadow: 0 0 32px 8px #ff9500aa; animation-delay: 0.2s; }
+.chakra-orb.chakra-3 { background: radial-gradient(circle, #ffcc00 60%, #fffbe6 100%); box-shadow: 0 0 32px 8px #ffcc00aa; animation-delay: 0.4s; }
+.chakra-orb.chakra-4 { background: radial-gradient(circle, #4cd964 60%, #b3ffd9 100%); box-shadow: 0 0 32px 8px #4cd964aa; animation-delay: 0.6s; }
+.chakra-orb.chakra-5 { background: radial-gradient(circle, #5ac8fa 60%, #b3e6ff 100%); box-shadow: 0 0 32px 8px #5ac8faaa; animation-delay: 0.8s; }
+.chakra-orb.chakra-6 { background: radial-gradient(circle, #007aff 60%, #b3c6ff 100%); box-shadow: 0 0 32px 8px #007affaa; animation-delay: 1s; }
+.chakra-orb.chakra-7 { background: radial-gradient(circle, #5856d6 60%, #e0b3ff 100%); box-shadow: 0 0 32px 8px #5856d6aa; animation-delay: 1.2s; }
+
+@keyframes chakra-pulse {
+  0% { opacity: 0.7; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.18); }
+}
+
+.welcome-title {
+  font-family: 'Cinzel', serif;
+  font-size: 2.8rem;
+  color: #fffbe6;
+  text-shadow: 0 0 12px #e0b3ff, 0 0 32px #4b2067;
+  margin-bottom: 1.2rem;
+  z-index: 2;
+}
+
+.welcome-note {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.3rem;
+  color: #e0d6ff;
+  background: rgba(30, 20, 70, 0.7);
+  border-radius: 18px;
+  padding: 1.5rem 2.2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 0 24px #4b2067aa;
+  z-index: 2;
+  text-align: center;
+  line-height: 1.7;
+}
+
+.features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+  z-index: 2;
+}
+
+.feature-card {
+  background: rgba(76, 32, 103, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 0 18px #e0b3ff55;
+  padding: 1.2rem 1.7rem;
+  min-width: 220px;
+  max-width: 260px;
+  color: #fffbe6;
+  text-align: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 0 32px #fffbe6cc, 0 0 64px #e0b3ff99;
+}
+
+.feature-card h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  color: #ffe6b3;
+  letter-spacing: 1px;
+}
+
+.feature-card p {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  color: #e0d6ff;
+}
+
+.cta-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  background: linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 24px;
+  padding: 0.9rem 2.5rem;
+  box-shadow: 0 0 18px #e0b3ff99;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+  margin-top: 1.5rem;
+  z-index: 2;
+}
+
+.cta-btn:hover {
+  background: linear-gradient(90deg, #ffe6b3 0%, #e0b3ff 100%);
+  box-shadow: 0 0 32px #fffbe6cc, 0 0 64px #e0b3ff99;
+  transform: scale(1.05);
+}
+
+@media (max-width: 700px) {
+  .features {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .feature-card {
+    min-width: 90vw;
+    max-width: 95vw;
+  }
+  .welcome-note {
+    padding: 1rem 0.5rem;
+  }
+}
+
+.rotate-image-bg {
+  animation: rotate-bg 28s linear infinite;
+}
+
+@keyframes rotate-bg {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+} 

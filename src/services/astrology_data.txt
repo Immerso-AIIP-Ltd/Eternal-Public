@@ -1,0 +1,556 @@
+## Chart Image Status
+The South Indian Rasi D1 Chart has been saved as 'south_indian_rasi_d1_chart.svg'.
+Chart URL: https://api.vedastro.org/api/Calculate/SouthIndianChart/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/ChartType/RasiD1/Ayanamsa/RAMAN
+------------------------------
+
+## House Data
+**House1**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Libra
+  - Constellation: Chitta - 3 (Lord: Mars)
+  - Lord of House: Venus
+  - Planets In House: None
+  - Planets Aspecting House: Moon
+  - House Strength: 570.0323958333333 (Strong)
+
+**House2**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Scorpio
+  - Constellation: Anuradha - 1 (Lord: Saturn)
+  - Lord of House: Mars
+  - Planets In House: None
+  - Planets Aspecting House: Jupiter, Saturn
+  - House Strength: 434.2789930555556 (Average)
+
+**House3**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Sagittarius
+  - Constellation: Moola - 3 (Lord: Ketu)
+  - Lord of House: Jupiter
+  - Planets In House: None
+  - Planets Aspecting House: Mars
+  - House Strength: 465.2273263888889 (Strong)
+
+**House4**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Capricorn
+  - Constellation: Uttarashada - 4 (Lord: Sun)
+  - Lord of House: Saturn
+  - Planets In House: Sun, Mercury
+  - Planets Aspecting House: Mars, Jupiter
+  - House Strength: 456.3529861111111 (Strong)
+
+**House5**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Aquarius
+  - Constellation: Satabhisha - 1 (Lord: Rahu)
+  - Lord of House: Saturn
+  - Planets In House: None
+  - Planets Aspecting House: None
+  - House Strength: 495.3775694444444 (Strong)
+
+**House6**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Pisces
+  - Constellation: Uttarabhadra - 1 (Lord: Saturn)
+  - Lord of House: Jupiter
+  - Planets In House: Venus, Saturn, Rahu
+  - Planets Aspecting House: Ketu
+  - House Strength: 443.66048611111114 (Average)
+
+**House7**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Aries
+  - Constellation: Aswini - 1 (Lord: Ketu)
+  - Lord of House: Mars
+  - Planets In House: Moon
+  - Planets Aspecting House: Saturn
+  - House Strength: 450.79420138888884 (Strong)
+
+**House8**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Taurus
+  - Constellation: Krithika - 3 (Lord: Sun)
+  - Lord of House: Venus
+  - Planets In House: Jupiter
+  - Planets Aspecting House: None
+  - House Strength: 527.0206597222223 (Strong)
+
+**House9**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Gemini
+  - Constellation: Aridra - 1 (Lord: Rahu)
+  - Lord of House: Mercury
+  - Planets In House: None
+  - Planets Aspecting House: None
+  - House Strength: 464.3053819444445 (Strong)
+
+**House10**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Cancer
+  - Constellation: Pushyami - 2 (Lord: Saturn)
+  - Lord of House: Moon
+  - Planets In House: Mars
+  - Planets Aspecting House: Sun, Mercury
+  - House Strength: 563.6615625000001 (Strong)
+
+**House11**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Leo
+  - Constellation: Makha - 3 (Lord: Ketu)
+  - Lord of House: Sun
+  - Planets In House: None
+  - Planets Aspecting House: Saturn
+  - House Strength: 382.32902777777775 (Average)
+
+**House12**: (URL: https://api.vedastro.org/api/Calculate/AllHouseData/HouseName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Sign: Virgo
+  - Constellation: Uttara - 3 (Lord: Sun)
+  - Lord of House: Mercury
+  - Planets In House: Ketu
+  - Planets Aspecting House: Mars, Jupiter, Venus, Rahu
+  - House Strength: 548.0246875 (Strong)
+
+------------------------------
+
+## Planet Data
+**Sun**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House4
+  - Zodiac Sign: Capricorn
+  - Constellation: Sravana - 4 (Lord: Moon)
+  - Avasta (State): KshuditaStarved
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: Mercury
+  - Planets Aspecting: Mars, Jupiter
+  - Dasa Effects (Ishta Kashta): Good & positive effects related to: means of gains, elder brother and freedom from misery, occupation, profession, temporal honours, foreign travels, self-respect, knowledge and dignity and means of livelihood.
+
+**Moon**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House7
+  - Zodiac Sign: Aries
+  - Constellation: Aswini - 2 (Lord: Ketu)
+  - Avasta (State): MuditaDelighted
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: None
+  - Planets Aspecting: Saturn
+  - Dasa Effects (Ishta Kashta): Good & positive effects related to: occupation, profession, temporal honours, foreign travels, self-respect, knowledge and dignity and means of livelihood, beginning of life, childhood, health, environment, personality, the physical body and character.
+
+**Mars**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House9
+  - Zodiac Sign: Gemini
+  - Constellation: Punarvasu - 3 (Lord: Jupiter)
+  - Avasta (State): KshuditaStarved
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: None
+  - Planets Aspecting: None
+  - Dasa Effects (Ishta Kashta): Good & positive effects related to: wife, husband, marriage, urinary organs, marital happiness, sexual diseases, business partner, diplomacy, talent, energies and general happiness, family, face, right eye, food, wealth, literary gift, and manner and source of death, self-acquisition and optimism, brothers and sisters, intelligence, cousins and other immediate relations, peace of mind, home life, mother, conveyances, house property, landed and ancestral properties, education and neck and shoulders, losses, expenditure, waste, extravagance, sympathy, divine knowledge, Moksha and the state after death.
+
+**Mercury**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House4
+  - Zodiac Sign: Capricorn
+  - Constellation: Sravana - 3 (Lord: Moon)
+  - Avasta (State): KshuditaStarved, MuditaDelighted
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: Sun
+  - Planets Aspecting: Mars, Jupiter
+  - Dasa Effects (Ishta Kashta): Bad & negative effects related to: father, righteousness, preceptor, grandchildren, intuition, religion, sympathy, fame, charities, leadership, journeys and communications with spirits, losses, expenditure, waste, extravagance, sympathy, divine knowledge, Moksha and the state after death, occupation, profession, temporal honours, foreign travels, self-respect, knowledge and dignity and means of livelihood.
+
+**Jupiter**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House8
+  - Zodiac Sign: Taurus
+  - Constellation: Rohini - 3 (Lord: Moon)
+  - Avasta (State): 
+  - Is Benefic: True
+  - Is Malefic: False
+  - Planets in Conjunction: None
+  - Planets Aspecting: None
+  - Dasa Effects (Ishta Kashta): Good & positive effects related to: brothers and sisters, intelligence, cousins and other immediate relations, debts, diseases, enemies, miseries, sorrows, illness and disappointments, family, face, right eye, food, wealth, literary gift, and manner and source of death, self-acquisition and optimism, peace of mind, home life, mother, conveyances, house property, landed and ancestral properties, education and neck and shoulders, losses, expenditure, waste, extravagance, sympathy, divine knowledge, Moksha and the state after death.
+
+**Venus**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House6
+  - Zodiac Sign: Pisces
+  - Constellation: Uttarabhadra - 2 (Lord: Saturn)
+  - Avasta (State): MuditaDelighted
+  - Is Benefic: True
+  - Is Malefic: False
+  - Planets in Conjunction: Rahu
+  - Planets Aspecting: Ketu
+  - Dasa Effects (Ishta Kashta): Good & positive effects related to: longevity, legacies and gifts and unearned wealth, cause of death, disgrace, degradation and details pertaining to death, beginning of life, childhood, health, environment, personality, the physical body and character, losses, expenditure, waste, extravagance, sympathy, divine knowledge, Moksha and the state after death.
+
+**Saturn**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House5
+  - Zodiac Sign: Aquarius
+  - Constellation: Poorvabhadra - 2 (Lord: Jupiter)
+  - Avasta (State): 
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: None
+  - Planets Aspecting: None
+  - Dasa Effects (Ishta Kashta): Bad & negative effects related to: peace of mind, home life, mother, conveyances, house property, landed and ancestral properties, education and neck and shoulders, children, grandfather, intelligence, emotions and fame, family, face, right eye, food, wealth, literary gift, and manner and source of death, self-acquisition and optimism, wife, husband, marriage, urinary organs, marital happiness, sexual diseases, business partner, diplomacy, talent, energies and general happiness, means of gains, elder brother and freedom from misery.
+
+**Rahu**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House6
+  - Zodiac Sign: Pisces
+  - Constellation: Uttarabhadra - 2 (Lord: Saturn)
+  - Avasta (State): 
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: Venus
+  - Planets Aspecting: Ketu
+  - Dasa Effects (Ishta Kashta): Bad & negative effects related to: losses, expenditure, waste, extravagance, sympathy, divine knowledge, Moksha and the state after death.
+
+**Ketu**: (URL: https://api.vedastro.org/api/Calculate/AllPlanetData/PlanetName/All/Location/Paris/Time/00%3A12/04%2F02%2F2025/%2B01%3A00/Ayanamsa/RAMAN)
+  - Occupies House: House12
+  - Zodiac Sign: Virgo
+  - Constellation: Uttara - 4 (Lord: Sun)
+  - Avasta (State): 
+  - Is Benefic: False
+  - Is Malefic: True
+  - Planets in Conjunction: None
+  - Planets Aspecting: Mars, Jupiter, Venus, Rahu
+  - Dasa Effects (Ishta Kashta): Bad & negative effects related to: debts, diseases, enemies, miseries, sorrows, illness and disappointments.
+
+------------------------------
+
+## Horoscope Predictions
+**Yoga**: LagnaLordIn6_8_12
+  - Description:  The native has a sickly constitution. 
+  - Related Planets: Jupiter, Venus
+  - Related Houses: House6
+  - Tags: HouseYoga
+
+**Yoga**: JupiterWith2ndLord_Or_2ndLordAspectedByMercury_Or_VenusInFavorable
+  - Description:  One becomes an orator and wealthy. 
+  - Related Planets: Mars, Mars, Venus
+  - Related Houses: House2
+  - Tags: HouseYoga
+
+**Yoga**: MercuryInQuadrant_2ndLordPowerful
+  - Description:  Make one proficient in occult sciences especially astrology. 
+  - Related Planets: Mars, Mercury, Mars
+  - Related Houses: House2
+  - Tags: HouseYoga
+
+**Yoga**: Lord3rdOrMarsIn8th6th12th_NoBeneficAspect_BrothersNotProsper
+  - Description:  Prosperity to brothers is rarely to be predicted. 
+  - Related Planets: Jupiter, Venus, Mercury, Jupiter, Mars
+  - Related Houses: House3, House6, House8, House12
+  - Tags: HouseYoga
+
+**Yoga**: Lord4thWithLord1st_GoodPlace_Or_Lord4thInTrineOrQuadrant
+  - Description:  The person possesses many houses. 
+  - Related Planets: Saturn, Saturn, Venus
+  - Related Houses: House4, House5
+  - Tags: HouseYoga
+
+**Yoga**: Lord9thInQuadrant_Lord4thWellSituated
+  - Description:  The person will have a good taste for artistic furniture. 
+  - Related Planets: Saturn, Mercury, Saturn, Mercury
+  - Related Houses: House4, House9
+  - Tags: HouseYoga
+
+**Yoga**: SaturnIn5thOrAspectsLagnaLordOrJupiter_BrainDerangement
+  - Description:  There will be brain derangement. 
+  - Related Planets: Saturn, Saturn, Venus, Jupiter
+  - Related Houses: House5
+  - Tags: HouseYoga
+
+**Yoga**: SeventhEvilSign_SeventhLordDebilitated_TwoMarriages
+  - Description:  Two marriages may be indicated. 
+  - Related Planets: Mars, Mars
+  - Related Houses: House7
+  - Tags: HouseYoga
+
+**Yoga**: Lord9In8OrInMovable
+  - Description:  The child will be born when its father is not in the place. 
+  - Related Planets: Mercury, Mercury
+  - Related Houses: House9
+  - Tags: HouseYoga
+
+**Yoga**: NinthLordInNavamsaOfJupiter
+  - Description:  The person becomes righteously inclined and charitable in disposition. 
+  - Related Planets: Mercury, Mercury, Jupiter
+  - Related Houses: House9
+  - Tags: HouseYoga
+
+**Yoga**: NinthLordInKendraOrTrikona_WithJupiterAspectOrJupiterInKendra
+  - Description:  The person becomes well acquainted with metaphysical lore. 
+  - Related Planets: Mercury, Saturn, Mercury, Jupiter
+  - Related Houses: House9, House4
+  - Tags: HouseYoga
+
+**Yoga**: MaleficIn12th_LordIsEvilPlanet
+  - Description:  Money will be spent on immoral purposes. 
+  - Related Planets: Mercury, Mercury, Ketu
+  - Related Houses: House12
+  - Tags: HouseYoga
+
+**Yoga**: Powerless12thLordInUnfavourableNavamsa
+  - Description:  The native will have deformed limbs. 
+  - Related Planets: Mercury, Mercury
+  - Related Houses: House12
+  - Tags: HouseYoga
+
+**Yoga**: Weak12thLordAspectedBy6thLord
+  - Description:  Money will be spent on useless litigation. 
+  - Related Planets: Mercury, Jupiter, Mercury, Jupiter
+  - Related Houses: House12, House6
+  - Tags: HouseYoga
+
+**Yoga**: SunAshtakavargaYoga11
+  - Description:  Death of the father will happen between the 30th and 36th year 
+  - Related Planets: Sun
+  - Related Houses: None
+  - Tags: Ashtakavarga
+
+**Yoga**: MercuryAshtakavargaYoga5
+  - Description: The person becomes highly learned in the Vedas
+  - Related Planets: Mercury, Jupiter, Saturn
+  - Related Houses: None
+  - Tags: Ashtakavarga
+
+**Yoga**: MercuryAshtakavargaYoga7
+  - Description: One becomes a great logician
+  - Related Planets: Mercury, Mars
+  - Related Houses: None
+  - Tags: Ashtakavarga
+
+**Yoga**: MercuryAshtakavargaYoga12A
+  - Description: Fame intelligence and learning
+  - Related Planets: Mercury, Saturn
+  - Related Houses: None
+  - Tags: Ashtakavarga
+
+**Yoga**: SunaphaYoga
+  - Description:  Self-earned property king ruler or his equal intelligent wealthy and good reputation. 
+  - Related Planets: Mars, Moon
+  - Related Houses: House2
+  - Tags: Yoga
+
+**Yoga**: AnaphaYoga
+  - Description:  Well-formed organs majestic appearance good reputation polite generous self-respect fond of dress and sense pleasures. In later life renunciation and austerity 
+  - Related Planets: Mercury, Moon
+  - Related Houses: House12
+  - Tags: Yoga
+
+**Yoga**: DhurdhuraYoga
+  - Description:  The native is bountiful. He will be blessed with much wealth and conveyances. 
+  - Related Planets: Moon
+  - Related Houses: None
+  - Tags: Yoga
+
+**Yoga**: VasumathiYoga
+  - Description:  The person will not be a dependent but will always command plenty of wealth. oceans 
+  - Related Planets: None
+  - Related Houses: None
+  - Tags: Yoga
+
+**Yoga**: RajalakshanaYoga
+  - Description:  The native will possess an attractive appearance and he will be endowed with all the good qualities of high personages. 
+  - Related Planets: None
+  - Related Houses: None
+  - Tags: Yoga
+
+**Yoga**: SakataYoga
+  - Description:  The native loses fortune and may regain it. He will be ordinary nd insignificant. He will suffer from poverty privation and misery. He will be stubborn and hated by relatives. 
+  - Related Planets: Moon, Jupiter
+  - Related Houses: None
+  - Tags: Yoga
+
+**Yoga**: VesiYoga
+  - Description:  The person will be fortunate happy virtuous famous and aristocratic. 
+  - Related Planets: None
+  - Related Houses: None
+  - Tags: Yoga
+
+**Yoga**: House1LordInHouse6
+  - Description:  In addition to the results produced by the lord of Lagna being in the third the following may also be noted. There will be bebts but they will be liquidated when the Dasa of the Lagndhipati comes. When the lord is fortified the native joins the army becomes a Commander or even a Commander-in-chief provided the lords Dasa operates at the opportune period. Or he may become head of medical or health services or an expert physician or surgeon. Here the other influences should be suitably balanced. 
+  - Related Planets: Venus, Jupiter
+  - Related Houses: House1, House6
+  - Tags: Personal
+
+**Yoga**: House2LordInHouse9
+  - Description: Skilful ill-health in young age but healthy afterwards will possess lot of wealth and become happy. When the 2nd lord is well fortified and the 9th lord is in Lagna the native will have good inheritance. There will also be benefits through different sources according to the nature of the sign and nakshatra held by the 2nd lord.
+  - Related Planets: Mars, Mercury
+  - Related Houses: House2, House9
+  - Tags: Personal
+
+**Yoga**: House3LordInHouse8
+  - Description: Involvement in a criminal case or false accusations. Trouble on account of death or bequests marriage unfortunate career will not be smooth victim of misfortune. When the 3rd lord is in the 8th he will suffer from a serious and dangerous disease and lose his younger brother.
+  - Related Planets: Jupiter, Venus
+  - Related Houses: House3, House8
+  - Tags: Personal
+
+**Yoga**: House4LordInHouse5
+  - Description: Loved and respected by others devotee of Vishnu becomes rich by self-effort. Mother comes from a respectable family. The native will acquire vehicles.
+  - Related Planets: Saturn
+  - Related Houses: House4, House5
+  - Tags: Personal
+
+**Yoga**: House5LordInHouse5
+  - Description: Lord favourably disposed indicates a number of sons  becomes great in his own line of activity  otherwise he becomes an expert in Mantrasastra and befriends persons in power. He may also become an expert in mathematics or head of a religious institution. Lord afflicted contrary results should be anticipated. Children will die he will not keep to his word wavering mentality and cruel.
+  - Related Planets: Saturn
+  - Related Houses: House5
+  - Tags: Personal
+
+**Yoga**: House6LordInHouse8
+  - Description: When fortified he will have Madhyayu or middle life. When afflicted he will have plenty of debts and will suffer from loathsome diseases. He will hunt after women other than his own wife and take pleasure in inflicting pain on others.
+  - Related Planets: Jupiter, Venus
+  - Related Houses: House6, House8
+  - Tags: Personal
+
+**Yoga**: House7LordInHouse9
+  - Description: If fortified the father may live abroad while the native may make his fortune in foreign lands. He will get an accomplished wife who will enable him to lead a righteous life. If afflicted the father may die early. Married partner may drag the native from the right course Dharmic of life and he may waste away his wealth and suffer penury.
+  - Related Planets: Mars, Mercury
+  - Related Houses: House7, House9
+  - Tags: Personal
+
+**Yoga**: House8LordInHouse6
+  - Description: If the lord of the 8th house joins the 6th lord in the 6th house a Rajayoga results. Material affluence fame and acquisition of objects desired are the good results. But because the 6th house is the house of disease the native may suffer ill-health. If afflicted the native suffers loss of money through theft and trouble through courts and the police. The evil is intensified if the 8th lord is in a kendra or trikona. The natives maternal uncle may suffer much trouble. If the 6th lord is fortified he is able to overcome all his troubles and emerge victor. No attempts made by his ill-wishers and enemies to harm him will succeed.
+  - Related Planets: Venus, Jupiter
+  - Related Houses: House8, House6
+  - Tags: Personal
+
+**Yoga**: House9LordInHouse4
+  - Description: The ninth lord in the 4th house gives vast landed properties and beautiful bungalows. Or the native may earn through estate and land dealings. His mother will be a rich and fortunate woman. He will inherit his fathers immovable properties. If the ninth lord is afflicted in the 4th house the native may not have any domestic unhappiness. His early life will be crossed by miseries due to a hard-hearted father or disharmony between parents. If Rahu afflicts mother may be a divorcee or living separately from his father.
+  - Related Planets: Mercury, Saturn
+  - Related Houses: House9, House4
+  - Tags: Personal
+
+**Yoga**: House10LordInHouse7
+  - Description: The 10th lord placed in the 7th house gives a mature wife who will assist the native in his work. He will travel abroad on diplomatic missions. He will be well known for his skill in talking and achieving objectives. He will make profits through partnerships and co-operative ventures. If malefics afflict the 10th lord the native will be debased in his sexual habits and indulge in every kind of vice.
+  - Related Planets: Moon, Mars
+  - Related Houses: House10, House7
+  - Tags: Personal
+
+**Yoga**: House11LordInHouse4
+  - Description: One acquires profits through landed estates rentals and products of the earth. His mother will be a cultured and distinguished lady. He will be renowned for his learning and scholarship of various subjects. He will live in comfort and enjoy all joys in life. He will have a devoted and charming wife.
+  - Related Planets: Sun, Saturn
+  - Related Houses: House11, House4
+  - Tags: Personal
+
+**Yoga**: House12LordInHouse4
+  - Description: Early death to mother mental restlessness unnecessary worry enmity of relatives and living abroad are some of the results. Suffering constant harrassment from the landlord his residence will be in an ordinary house. But if the twelfth lord is well placed these adverse indications get mitigated to a large extent. If Venus is strong the native may own his own conveyance but it will always give trouble.
+  - Related Planets: Mercury, Saturn
+  - Related Houses: House12, House4
+  - Tags: Personal
+
+**Yoga**: LibraRising
+  - Description:  Mental Tendencies.Persons born in Libra are idealistic quick-witted vindictive forceful and positive. Physical Tendencies.They generally possess fair complexion a middle-sized stature phlegmatic constitution handsome appearance broad face fine eyes broad chest and regular features. Their appearance will be generally youthful. General Tendencies.People born in this sign are generally of a sensual disposition. They are keen observers of human nature. They have keen foresight and reason out things from the standpoint of their own views. They love justice peace order and are agreeable persons. They are ambitious. They are more idealists than realists or practical men and often contemplate on schemes that are like building castles in the air. They are not sensitive to what others say of them. As political leaders and religious reformers they exert tremendous influence over the masses and sometimes their zeal and enthusiasm can go to such a pitch that they can force their views upon unwilling minds. They are not easily amenable to reason. They are great lovers of music. Truth and honesty have a special appeal for them. 
+  - Related Planets: Venus
+  - Related Houses: House1
+  - Tags: Personal, RisingSign
+
+**Yoga**: LibraRising2
+  - Description:  The complexion of persons born in this sign will be fair their stature middle-sized face broad eyes fine chest broad and light appearance handsome constitution rather phlegmatic sensual disposition and keen observation. They have keen foresight and reason out things from the standpoint of their own views. Firm in conviction and unmoved by mean motives they are somewhat susceptible to the feelings of others minds. They are more idealists than realists or practical men and often contemplate upon schemes like building castles in the air. They are not sensitive to what others say of them. But as political leaders and religious reformers they exert tremendous influence over the masses and sometimes their zeal and enthusiasm go to such a high pitch that they force their views upon others of opposite thought not realising the baneful after-effects of such procedure. They love excitement and have the power of intuition upon which they often rely for their own guidance. They are not easily amenable to reason. They are great lovers of music. They have a special liking for truth and honesty and do not hesitate to sacrifice even their lives at the altars of freedom and fair-play. Their domestic life may be crossed by frequent tension. 
+  - Related Planets: Venus
+  - Related Houses: House1
+  - Tags: Personal, RisingSign
+
+**Yoga**: SunInHouse4AspectedBySaturnOrMars
+  - Description:  Obstacles in life are shown 
+  - Related Planets: Saturn, Sun
+  - Related Houses: House4
+  - Tags: PlanetInHouse
+
+**Yoga**: MercuryInHouse4
+  - Description:  Shines well as an educationist or diplomat. He will boldly criticise the Government. He will be held in great esteem. Father will be a self-made man. He will command a good conveyance. He will have taste for music and other fine arts and will frequently travel to far off countries. He will be witty in speech. 
+  - Related Planets: Saturn, Mercury
+  - Related Houses: House4
+  - Tags: PlanetInHouse
+
+**Yoga**: SaturnInHouse5
+  - Description:  Evil-minded and stupid  sickly and weak poor and hated by others. This combination denotes sorrows through children. Fortune will be variable and not steady and he will have a hypocritical nature. Quarrels with friends and relatives and sorrow in domestic life. 
+  - Related Planets: Saturn, Saturn
+  - Related Houses: House5
+  - Tags: PlanetInHouse
+
+**Yoga**: VenusInHouse6Afflicted
+  - Description:  Health affected by excessive sexual indulgence. Fond of other women and licentious. 
+  - Related Planets: Jupiter, Venus
+  - Related Houses: House6
+  - Tags: PlanetInHouse
+
+**Yoga**: MoonInHouse7
+  - Description:  The native will be passionate and easily roused to jealousy. Mother may die while the native is young. Wife will be good-looking but the native will seek other women. Narrowminded but sociable he will be energetic and successful in life. 
+  - Related Planets: Mars, Moon
+  - Related Houses: House7
+  - Tags: PlanetInHouse
+
+**Yoga**: MoonInHouse7Waxing
+  - Description:  Hails from a good family. Will suffer pain in the groins. He will be stingy. 
+  - Related Planets: Mars, Moon
+  - Related Houses: House7
+  - Tags: PlanetInHouse
+
+**Yoga**: JupiterInHouse8
+  - Description:  will be unhappy but generous hearted. He will live long. He will have difficulty in speech. He may do ignoble deeds but pretend to be noble. He may have liaisons with widows. He will have dirty habits and suffer from colitis. He will have a painless death 
+  - Related Planets: Venus, Jupiter
+  - Related Houses: House8
+  - Tags: PlanetInHouse
+
+**Yoga**: MarsInHouse9
+  - Description:  Mars  The native will wield authority and be affluent. He will have children and be happy. He will not be a dutiful son but otherwise generous and famous for his good qualities if either Jupiter or Mercury conjoin Mars the native will be learned in religion and spiritual lore. Venus here gives two wives and foreign residence it also gives the native proficiency in law. Saturn with Mars in the 9th indicates addiction to other women and a wicked nature. He will be self-seeking stubborn and impetuous. 
+  - Related Planets: Mercury, Mars
+  - Related Houses: House9
+  - Tags: PlanetInHouse
+
+**Yoga**: KetuInHouse12
+  - Description:  Ketu  The native will have a restless and wandering mind and leave his country of birth. The lower classes will befriend him. All his inherited property may be lost. 
+  - Related Planets: Mercury, Ketu
+  - Related Houses: House12
+  - Tags: PlanetInHouse
+
+**Yoga**: Lord2InHouse9
+  - Description: In the ninth  From father voyages and shipping. source of income
+  - Related Planets: Mercury, Mars
+  - Related Houses: House9
+  - Tags: Personal
+
+**Yoga**: MaleficIn11FromArudha
+  - Description: Unjust means of earning because malefic planets in the 11th from Arudha Lagna.
+  - Related Planets: Sun, Mars
+  - Related Houses: House11
+  - Tags: Personal
+
+**Yoga**: Lord7And1Friends
+  - Description:  Lords of the 7th and 1st are friends then the native will be loved by his wife. 
+  - Related Planets: None
+  - Related Houses: None
+  - Tags: Marriage
+
+**Yoga**: SunInCapricorn
+  - Description:  Mean-minded stubborn ignorant miserly pushful unhappy boring active meddlesome obliging humorous witty affable prudent firm. 
+  - Related Planets: Sun
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: MoonInAries
+  - Description:  Round eyes impulsive fond of travel irritable fond of women vegetable diet quick to decide and act haughty inflexible sores in the head dexterous tickle-minded war-like enterprising good position. self-respect valiant ambitious liable to hydrophobia if the Moon is afflicted large thighs popular restless idiosyncratic. versatile. 
+  - Related Planets: Moon
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: MarsInGemini
+  - Description:  Loving family and children taste in refinement scientific middle stature well built learned ambitious. quick rash ingenious skilled in music fearless tactless peevish unhappy subservient diplomate humiliating detective. 
+  - Related Planets: Mars
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: MercuryInCapricorn
+  - Description:  Selfless business tendencies economical debtor inconsistent low stature cunning inventive active. restless suspicious drudging. 
+  - Related Planets: Mercury
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: JupiterInTaurus
+  - Description:  Stately elegant self-importance liberal dutiful sons just sympathetic well read creative ability despotic healthy happy marriage liked by all inclination to self-gratification. 
+  - Related Planets: Jupiter
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: VenusInPisces
+  - Description:  Witty tactful learned popular just ingenious caricaturist modest refined powerful exalted respected pleasure-seeking. 
+  - Related Planets: Venus
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+**Yoga**: SaturnInAquarius
+  - Description:  Practical able diplomatic ingenious a bit conceited prudent happy reflective intellectual philosophical vanquished by enemies. 
+  - Related Planets: Saturn
+  - Related Houses: None
+  - Tags: PlanetInSigns
+
+------------------------------

@@ -1,0 +1,103 @@
+.frame {
+    background-color: #000000;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+}
+
+.frame .overlap-group-wrapper {
+    background-color: #000000;
+    height: 1131px;
+    width: 1920px;
+}
+
+.frame .overlap-group {
+    height: 1131px;
+    position: relative;
+}
+
+.frame .clouds {
+    height: 670px;
+    left: 338px;
+    object-fit: cover;
+    position: absolute;
+    top: 461px;
+    width: 1418px;
+}
+
+.frame .img {
+    height: 407px;
+    left: 0;
+    object-fit: cover;
+    position: absolute;
+    top: 724px;
+    width: 978px;
+}
+
+.frame .clouds-2 {
+    height: 424px;
+    left: 1075px;
+    object-fit: cover;
+    position: absolute;
+    top: 707px;
+    width: 845px;
+}
+
+.frame .clouds-3 {
+    height: 609px;
+    left: 1075px;
+    object-fit: cover;
+    position: absolute;
+    top: 439px;
+    width: 845px;
+}
+
+.frame .clouds-4 {
+    height: 609px;
+    left: 0;
+    object-fit: cover;
+    position: absolute;
+    top: 234px;
+    width: 664px;
+}
+
+.frame .clouds-5 {
+    height: 657px;
+    left: 160px;
+    position: absolute;
+    top: 26px;
+    width: 1471px;
+}
+
+.frame .clouds-6 {
+    height: 657px;
+    left: 620px;
+    position: absolute;
+    top: 26px;
+    width: 1300px;
+}
+
+.frame .clouds-7 {
+    height: 566px;
+    left: 39px;
+    position: absolute;
+    top: 0;
+    width: 1471px;
+}
+
+.frame .clouds-8 {
+    height: 476px;
+    left: 774px;
+    position: absolute;
+    top: 0;
+    width: 1146px;
+}
+
+.frame .clouds-9 {
+    height: 620px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 775px;
+}
