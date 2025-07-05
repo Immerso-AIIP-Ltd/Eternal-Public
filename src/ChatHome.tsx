@@ -824,7 +824,7 @@ const ChatHome: React.FC = () => {
     );
   }
 
-  return (
+    return (
     <div className="d-flex" style={{ minHeight: '100vh', background: '#f7f7fa' }}>
       {/* Enhanced CSS with validation styles */}
       <style>{`
@@ -891,10 +891,43 @@ const ChatHome: React.FC = () => {
           color: #fff !important;
           box-shadow: 0 2px 8px 0 rgba(124,58,237,0.10);
         }
+        
+        /* Responsive sidebar behavior */
+        @media (min-width: 768px) {
+          .sidebar {
+            position: relative !important;
+            left: 0 !important;
+            height: 100vh !important;
+            transform: none !important;
+          }
+          
+          .sidebar-backdrop {
+            display: none !important;
+          }
+          
+          .main-chat-area {
+            margin-left: 270px !important;
+          }
+        }
+        
+        @media (max-width: 767px) {
+          .sidebar {
+            position: fixed !important;
+            left: -290px !important;
+          }
+          
+          .sidebar.open {
+            left: 0 !important;
+          }
+          
+          .main-chat-area {
+            margin-left: 0 !important;
+          }
+        }
       `}</style>
 
-      {/* Left Sidebar */}
-      <nav className={`sidebar d-flex flex-column p-3 position-fixed h-100${sidebarOpen ? ' open' : ''}`} 
+      {/* Left Sidebar - Desktop: always visible, Mobile: toggleable */}
+      <nav className={`sidebar d-flex flex-column p-3 position-fixed h-100 d-md-block${sidebarOpen ? ' open' : ''}`} 
            style={{ 
              width: '270px', 
              background: '#fff', 
@@ -903,7 +936,7 @@ const ChatHome: React.FC = () => {
              zIndex: 1050, 
              left: sidebarOpen ? 0 : '-290px', 
              transition: 'left 0.3s, box-shadow 0.3s', 
-             border: 'none' 
+             border: 'none'
            }}>
         
         {/* User profile at top */}
@@ -1031,9 +1064,8 @@ const ChatHome: React.FC = () => {
       </button>
 
       {/* Main Chat Area */}
-      <div className="flex-grow-1 d-flex flex-column" 
+      <div className="flex-grow-1 d-flex flex-column main-chat-area" 
            style={{ 
-             marginLeft: sidebarOpen && window.innerWidth >= 768 ? '270px' : '0', 
              background: '#f7f7fa', 
              backgroundImage: 'radial-gradient(#e0e0e0 1px, transparent 1px)', 
              backgroundSize: '20px 20px', 
