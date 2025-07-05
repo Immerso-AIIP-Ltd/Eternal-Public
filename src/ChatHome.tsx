@@ -590,7 +590,7 @@ const ChatHome: React.FC = () => {
     const error = validationState.error;
 
     return (
-      <div className="validation-feedback mb-3" style={{ maxWidth: '620px', margin: '0 auto' }}>
+      <div className="validation-feedback mb-3" style={{ maxWidth: '100%', margin: '0 auto' }}>
         <div 
           className={`alert alert-${error.type === 'error' ? 'danger' : error.type === 'info' ? 'info' : 'warning'} border-0 shadow-sm`}
           style={{ 
@@ -697,7 +697,7 @@ const ChatHome: React.FC = () => {
     };
 
     return (
-      <div className="text-center mb-3" style={{ maxWidth: '620px', margin: '0 auto' }}>
+      <div className="text-center mb-3" style={{ maxWidth: '100%', margin: '0 auto' }}>
         <div className="d-flex align-items-center justify-content-center p-3 bg-light rounded-3">
           <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
             <span className="visually-hidden">Validating...</span>
@@ -735,7 +735,8 @@ const ChatHome: React.FC = () => {
             boxShadow: validationState.error ? 
               '0 2px 8px rgba(255, 183, 77, 0.3)' : 
               '0 2px 8px rgba(80, 0, 120, 0.06)',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
+            maxWidth: '100%'
           }}
         >
           <button className="btn btn-link text-muted me-2 p-0" title="Attach file">
@@ -895,10 +896,11 @@ const ChatHome: React.FC = () => {
         /* Responsive sidebar behavior */
         @media (min-width: 768px) {
           .sidebar {
-            position: relative !important;
+            position: fixed !important;
             left: 0 !important;
             height: 100vh !important;
             transform: none !important;
+            z-index: 1000 !important;
           }
           
           .sidebar-backdrop {
@@ -907,6 +909,14 @@ const ChatHome: React.FC = () => {
           
           .main-chat-area {
             margin-left: 270px !important;
+            width: calc(100% - 270px) !important;
+            max-width: none !important;
+          }
+          
+          .chat-container {
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 20px !important;
           }
         }
         
@@ -922,6 +932,13 @@ const ChatHome: React.FC = () => {
           
           .main-chat-area {
             margin-left: 0 !important;
+            width: 100% !important;
+          }
+          
+          .chat-container {
+            max-width: 100% !important;
+            margin: 0 auto !important;
+            padding: 0 15px !important;
           }
         }
       `}</style>
@@ -1094,8 +1111,7 @@ const ChatHome: React.FC = () => {
 
         <header className="navbar navbar-expand-lg navbar-light bg-white shadow-sm p-3 mb-4 rounded-bottom" 
                 style={{ borderRadius: '0 0 15px 15px' }}>
-          <div className="container-fluid">
-            <div className="d-flex align-items-center ms-auto">
+          <div className="d-flex align-items-center justify-content-end w-100">
               <button 
                 className="btn btn-primary btn-sm rounded-pill me-2"
                 onClick={() => setShowReportsModal(true)}
@@ -1121,11 +1137,10 @@ const ChatHome: React.FC = () => {
                       style={{ width: '36px', height: '36px' }}>
                 <i className="bi bi-bell-fill"></i>
               </button>
-            </div>
           </div>
         </header>
 
-        <div className="container py-4 flex-grow-1 d-flex flex-column justify-content-between">
+        <div className="chat-container py-4 flex-grow-1 d-flex flex-column justify-content-between">
           {pathType && (
             <div className="flex-grow-1 d-flex flex-column">
               <div className="bg-white rounded-4 shadow-sm p-4 mb-4 overflow-auto" 
