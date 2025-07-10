@@ -4,7 +4,7 @@ import { useAuth } from './context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { generateFullSoulReport } from './services/reportUtils';
-import { generateExpansionReport } from './services/gpt';
+import { generateReportWithVision, generateTextOnlyReport } from './services/gpt';
 import { motion } from 'framer-motion';
 
 type AIStats = {
@@ -124,7 +124,7 @@ const ReportPage = () => {
       });
       const prompt = `Based on the following user answers and image analyses, generate a full Eternal Soul Report with these sections:\n- ${sectionNames.join('\n- ')}\n\nUser Data:\n${userData}\n\nAfter your detailed report, please add a summary block like this, with values calculated from your analysis:\n\nVibrational Frequency: 432 Hz (Peace)\nBody Score: 80 (Good)\nOverall Percentage: 80%\nYour Soul Score: 85%\nBody Frequency: 500 Hz`;
       // Use GPT to generate the report
-      const aiContent = await generateExpansionReport({ soulPath: currentUser.uid, qaHistory: pairs });
+      const aiContent = await generateReportWithVision({ soulPath: currentUser.uid, qaHistory: pairs });
       let reportText = '';
       if (typeof aiContent === 'string') {
         reportText = aiContent;

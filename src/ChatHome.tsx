@@ -1,1365 +1,1354 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+"use client"
+
+import type React from "react"
+import { useState, useEffect, useRef } from "react"
+import {
+  Zap,
+  Palette,
+  Flame,
+  Star,
+  Layers,
+  Heart,
+  Hash,
+  Lock,
+  MessageCircle,
+  FileText,
+  User,
+  ChevronDown,
+  Coins,
+  ArrowLeft,
+  Send,
+  Sparkles,
+  X,
+  Crown,
+  Check,
+  Mail,
+} from "lucide-react"
+import defaultProfilePic from './default-pfp.jpg';
 import { useAuth } from './context/AuthContext';
-import { doc, setDoc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
-import { getVedastroDataAndImage, generateJyotishReading } from './services/vedastro';
-import { 
-  generateAuraReport, 
-  generateVibrationalReport, 
-  validateUserResponseWithGPT,
-  validateChatHomeResponse,
-  generateValidationFeedback 
-} from './services/gpt';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import { format } from 'date-fns';
+// Add this import for auto-resize
+import ReactTextareaAutosize from 'react-textarea-autosize';
+// Add this import for markdown rendering
+import ReactMarkdown from 'react-markdown';
+import { generateReportWithVision } from './services/gpt';
 
-type VedastroResult = {
-  astrologyData: any;
-  chartImages: any;
-};
-
-// Question sets for each path
-const vibrationalQuestions = [
-  {
-    section: 'Mood & Mindset',
-    questions: [
-      {
-        text: 'How do you feel emotionally most of the time?',
-        options: ['Joyful', 'Calm', 'Neutral', 'Stressed', 'Angry', 'Sad']
-      },
-      {
-        text: 'What thoughts usually pop into your mind?',
-        options: ['Positive', 'Mixed', 'Doubtful', 'Negative']
-      },
-      {
-        text: "Energy check! On a scale of 1-10, how's your energy today?",
-        options: Array.from({ length: 10 }, (_, i) => (i + 1).toString()),
-        isSlider: true
-      }
-    ],
-    encouragement: "Awesome! You've done the first step. Just two more vibe zones to check."
-  },
-  {
-    section: 'Body & Spirit',
-    questions: [
-      {
-        text: 'Any physical tension, pain, or fatigue?',
-        options: ['Yes', 'No'],
-        followUp: 'Where?'
-      },
-      {
-        text: 'Do you do anything like meditation, prayer, or just sit in silence?',
-        options: ['Often', 'Sometimes', 'Rarely', 'Never']
-      },
-      {
-        text: 'Do you feel connected to a purpose or inner voice?',
-        options: ['Yes fully', 'Sometimes', 'Not really']
-      }
-    ],
-    encouragement: "Nice! You're 2/3 done! Let's wrap up with a few quick vibe signals..."
-  },
-  {
-    section: 'Environment & Intuition',
-    questions: [
-      {
-        text: 'Do the people around you lift you up or bring you down?',
-        options: ['Uplift me', 'Neutral', 'Drain me']
-      },
-      {
-        text: 'How often do you spend time in nature or peaceful places?',
-        options: ['Daily', 'Weekly', 'Rarely', 'Never']
-      },
-      {
-        text: 'Do you get gut feelings or dreams that guide you?',
-        options: ['Yes a lot', 'Sometimes', 'Not really']
-      },
-      {
-        text: 'Want to try a sound or crystal frequency test later?',
-        options: ['Yes please', 'Maybe', 'Not now']
-      }
-    ],
-    encouragement: null
-  }
-];
-
-const karmicQuestions = [
-  {
-    text: "Thanks for clicking! To make your reading even more accurate, could you please confirm the city and country of your birth?",
-    key: 'birthPlace',
-    placeholder: "e.g., New York, USA or Mumbai, India"
-  },
-  {
-    text: "What's one area of your life you're most curious about right now? (e.g., career, relationships, health, spiritual growth)",
-    key: 'lifeArea',
-    placeholder: "e.g., career growth, finding love, health challenges"
-  },
-  {
-    text: "Is there any specific challenge or recurring theme you've noticed in your life that you'd like some insight into?",
-    key: 'challenge',
-    placeholder: "e.g., repeated relationship patterns, financial blocks"
-  }
-];
-
-const auraQuestions = [
-  {
-    text: "How would you describe your current emotional energy?",
-    options: ["calm and peaceful", "passionate and energetic", "creative and adventurous", "thoughtful and introspective"]
-  },
-  {
-    text: "When facing challenges, what is your usual approach?",
-    options: ["facing them head-on with confidence", "looking for creative solutions", "reflecting deeply before acting", "seeking harmony and balance"]
-  },
-  {
-    text: "Which environment makes you feel most recharged?",
-    options: ["being in nature or quiet places", "social gatherings and lively events", "engaging in artistic or creative activities", "meditative or spiritual settings"]
-  },
-  {
-    text: "Which word resonates with you most right now?",
-    options: ["strength", "joy", "wisdom", "compassion"]
-  }
-];
-
-// Helper functions
-const formatDateForAPI = (dateString: string | undefined): string => {
-  if (!dateString) return '01/01/2000';
-  const [year, month, day] = dateString.split('-');
-  return `${day}/${month}/${year}`;
-};
-
-const formatTimeForAPI = (timeString: string | undefined, timeFormat: string | undefined): string => {
-  if (!timeString) return '00:00';
-  const [time, period] = timeString.includes(' ') ? timeString.split(' ') : [timeString, timeFormat];
-  let [hours, minutes] = time.split(':');
-  if (period === 'PM' && hours !== '12') {
-    hours = (parseInt(hours) + 12).toString();
-  } else if (period === 'AM' && hours === '12') {
-    hours = '00';
-  }
-  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
-};
-
-// Enhanced validation state interface
-interface ValidationState {
-  isValidating: boolean;
-  error: ValidationFeedback | null;
-  attempts: number;
-  maxAttempts: number;
+// Utility function
+function cn(...classes: (string | undefined | null | boolean)[]): string {
+  return classes.filter(Boolean).join(" ")
 }
 
-interface ValidationFeedback {
-  type: 'success' | 'warning' | 'error' | 'info';
-  title: string;
-  message: string;
-  encouragement?: string;
-  icon?: string;
-  showTips?: boolean;
-  allowProceed?: boolean;
-  reason?: string;
-  confidence?: number;
+// UI Components
+function Button({
+  children,
+  onClick,
+  disabled,
+  variant = "default",
+  size = "default",
+  className = "",
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  disabled?: boolean
+  variant?: "default" | "outline" | "ghost"
+  size?: "default" | "sm"
+  className?: string
+}) {
+  const baseClasses =
+    "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+
+  const variants = {
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    outline: "border border-input hover:bg-accent hover:text-accent-foreground",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+  }
+
+  const sizes = {
+    default: "h-10 py-2 px-4",
+    sm: "h-9 px-3 rounded-md",
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(baseClasses, variants[variant], sizes[size], className)}
+    >
+      {children}
+    </button>
+  )
 }
 
-const ChatHome: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+function Badge({
+  children,
+  className = "",
+  variant = "default",
+}: {
+  children: React.ReactNode
+  className?: string
+  variant?: "default" | "secondary"
+}) {
+  const baseClasses =
+    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+
+  const variants = {
+    default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
+    secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+  }
+
+  return <div className={cn(baseClasses, variants[variant], className)}>{children}</div>
+}
+
+function Avatar({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full", className)}>{children}</div>
+  )
+}
+
+function AvatarImage({ src, alt = "" }: { src: string; alt?: string }) {
+  return <img className="aspect-square h-full w-full" src={src || "/placeholder.svg"} alt={alt} />
+}
+
+function AvatarFallback({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("flex h-full w-full items-center justify-center rounded-full bg-muted", className)}>
+      {children}
+    </div>
+  )
+}
+
+function Textarea({
+  value,
+  onChange,
+  onKeyPress,
+  placeholder,
+  className = "",
+  rows = 3,
+}: {
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onKeyPress?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
+  placeholder?: string
+  className?: string
+  rows?: number
+}) {
+  return (
+    <textarea
+      value={value}
+      onChange={onChange}
+      onKeyPress={onKeyPress}
+      placeholder={placeholder}
+      rows={rows}
+      className={cn(
+        "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        className,
+      )}
+    />
+  )
+}
+
+function ScrollArea({
+  children,
+  className = "",
+  ref,
+}: {
+  children: React.ReactNode
+  className?: string
+  ref?: React.RefObject<HTMLDivElement>
+}) {
+  return (
+    <div ref={ref} className={cn("relative overflow-auto h-full", className)}>
+      <div className="h-full w-full">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Dialog({
+  open,
+  onOpenChange,
+  children,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  children: React.ReactNode
+}) {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black/50" onClick={() => onOpenChange(false)} />
+      {children}
+    </div>
+  )
+}
+
+function DialogContent({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        "relative z-50 grid w-full gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg md:w-full",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+function DialogHeader({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-col space-y-1.5 text-center sm:text-left">{children}</div>
+}
+
+function DialogTitle({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  return <h2 className={cn("text-lg font-semibold leading-none tracking-tight", className)}>{children}</h2>
+}
+
+// Types
+interface Message {
+  id: string
+  type: "user" | "ai"
+  content: string
+  timestamp: Date
+  options?: string[]
+}
+
+// Data
+const chatSections = [
+  {
+    id: "ask-about-today",
+    label: "Ask about today",
+    description: "General guidance and support",
+    icon: MessageCircle,
+    color: "text-blue-600",
+  },
+]
+
+const reportSections = [
+  {
+    id: "vibrational-frequency",
+    label: "Vibrational Frequency",
+    description: "Your current energy reading",
+    icon: Zap,
+    color: "text-amber-600",
+  },
+  {
+    id: "aura-profile",
+    label: "Aura Profile",
+    description: "Color, emotion, protection & openness",
+    icon: Palette,
+    color: "text-violet-600",
+  },
+  {
+    id: "flame-score",
+    label: "Flame Score",
+    description: "Your spiritual evolution meter",
+    icon: Flame,
+    color: "text-orange-600",
+  },
+  {
+    id: "star-map",
+    label: "Star Map",
+    description: "Planetary transits & karmic insights",
+    icon: Star,
+    color: "text-blue-600",
+  },
+  {
+    id: "kosha-scan",
+    label: "Kosha Scan",
+    description: "The balance across your 5 inner bodies",
+    icon: Layers,
+    color: "text-emerald-600",
+  },
+  {
+    id: "longevity-index",
+    label: "Longevity Index",
+    description: "Energy-nutrition alignment & tips",
+    icon: Heart,
+    color: "text-rose-600",
+  },
+  {
+    id: "numerology",
+    label: "Numerology",
+    description: "Your numbers and their meanings",
+    icon: Hash,
+    color: "text-indigo-600",
+  },
+]
+
+const sectionTitles: Record<string, string> = {
+  "ask-about-today": "Ask about today",
+  "vibrational-frequency": "Vibrational Frequency Reading",
+  "aura-profile": "Aura Profile Analysis",
+  "flame-score": "Spiritual Flame Score",
+  "star-map": "Cosmic Star Map",
+  "kosha-scan": "Kosha Body Scan",
+  "longevity-index": "Longevity Index",
+  numerology: "Numerology Reading",
+}
+
+const creditPackages = [
+  {
+    name: "Starter Pack",
+    credits: 50,
+    price: "$5.00",
+    pricePerCredit: "$0.10",
+    popular: false,
+  },
+  {
+    name: "Value Pack",
+    credits: 100,
+    price: "$9.00",
+    pricePerCredit: "$0.09",
+    savings: "Save 10%",
+    popular: true,
+  },
+]
+
+const reportBundles = [
+  {
+    name: "Single Report",
+    reports: 1,
+    credits: 20,
+    priceEquivalent: "$1.80 - $2.00",
+    popular: false,
+  },
+  {
+    name: "Triple Bundle",
+    reports: 3,
+    credits: 40,
+    priceEquivalent: "$3.60 - $4.00",
+    savings: "Save 33%",
+    popular: true,
+  },
+  {
+    name: "Complete Bundle",
+    reports: 6,
+    credits: 100,
+    priceEquivalent: "$9.00 - $10.00",
+    savings: "Save 17%",
+    popular: false,
+  },
+]
+
+// Helper Functions
+const getInitialMessage = (section: string): Message => {
+  const messages: Record<string, { content: string; options: string[] }> = {
+    "ask-about-today": {
+      content: "Hello! I'm here to help you with whatever is on your mind today. Whether you're facing challenges, seeking guidance, or just need someone to talk to, I'm here to listen and provide support. What would you like to discuss?",
+      options: [
+        "I'm feeling stressed about work",
+        "I need relationship advice",
+        "I want to explore my spiritual path",
+        "I'm looking for life guidance",
+        "Tell me about my energy today"
+      ]
+    },
+    "star-map": {
+      content: "Welcome to your Cosmic Star Map reading. I can help you understand planetary transits, karmic insights, and how celestial movements affect your spiritual journey. What specific aspect of your cosmic alignment would you like to explore today?",
+      options: [
+        "What are my current planetary transits?",
+        "Tell me about my karmic lessons",
+        "How do the stars affect my relationships?",
+        "What's my spiritual purpose?",
+        "Show me my cosmic challenges"
+      ]
+    },
+    "vibrational-frequency": {
+      content: "Let's explore your current vibrational frequency. I can help you understand your energy patterns and how they're affecting your daily life. What aspects of your energy would you like to examine?",
+      options: [
+        "What's my current energy level?",
+        "How can I raise my vibration?",
+        "What's blocking my energy flow?",
+        "Show me my energy patterns",
+        "How does my energy affect others?"
+      ]
+    },
+    "aura-profile": {
+      content: "Welcome to your Aura Profile analysis. I can help you understand the colors, emotions, and protective energies surrounding you. What would you like to know about your aura today?",
+      options: [
+        "What colors are in my aura?",
+        "How strong is my protection?",
+        "What emotions am I carrying?",
+        "How can I cleanse my aura?",
+        "Show me my aura's health"
+      ]
+    },
+    "flame-score": {
+      content: "Let's examine your Spiritual Flame Score - your evolution meter on the spiritual path. I can help you understand where you are in your journey and how to continue growing. What aspects of your spiritual development interest you most?",
+      options: [
+        "What's my current flame score?",
+        "How can I increase my spiritual growth?",
+        "What's my next spiritual milestone?",
+        "Show me my spiritual strengths",
+        "What's blocking my spiritual progress?"
+      ]
+    },
+    "kosha-scan": {
+      content: "Welcome to your Kosha Scan. I can help you understand the balance across your 5 inner bodies - physical, energetic, mental, wisdom, and bliss. Which layer would you like to explore first?",
+      options: [
+        "Scan my physical body (Annamaya)",
+        "Check my energy body (Pranamaya)",
+        "Analyze my mental body (Manomaya)",
+        "Explore my wisdom body (Vijnanamaya)",
+        "Connect to my bliss body (Anandamaya)"
+      ]
+    },
+    "longevity-index": {
+      content: "Let's explore your Longevity Index - the alignment between your energy and nutrition for optimal health. I can provide insights and tips for enhancing your vitality. What health aspects concern you most?",
+      options: [
+        "What's my current longevity score?",
+        "How can I improve my vitality?",
+        "What foods align with my energy?",
+        "Show me my health patterns",
+        "What lifestyle changes should I make?"
+      ]
+    },
+    numerology: {
+      content: "Welcome to your Numerology reading. I can help you understand the significance of numbers in your life and their deeper meanings. What numbers or life patterns would you like to explore?",
+      options: [
+        "What's my life path number?",
+        "Tell me about my destiny number",
+        "What's my soul urge number?",
+        "Show me my personal year number",
+        "What numbers are significant for me?"
+      ]
+    },
+  }
+
+  const messageData = messages[section] || messages["ask-about-today"]
+  return {
+    id: "1",
+    type: "ai",
+    content: messageData.content,
+    options: messageData.options,
+    timestamp: new Date(),
+  }
+}
+
+// Helper function to parse AI response and extract answer + options
+function parseAIResponse(response: string): { answer: string; options: string[] } {
+  // Look for common patterns that indicate follow-up questions
+  const patterns = [
+    /(.*?)(?:\n\n|\n)(?:Here are some follow-up questions:|Suggested questions:|You might also ask:|Next steps:|Related questions:)([\s\S]*)/,
+    /(.*?)(?:\n\n|\n)(?:1\.|2\.|3\.|4\.)([\s\S]*)/
+  ]
+  for (const pattern of patterns) {
+    const match = response.match(pattern)
+    if (match) {
+      const answer = match[1].trim()
+      const optionsText = match[2].trim()
+      // Extract numbered options
+      const options = optionsText
+        .split(/\n/)
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim())
+        .filter(option => option.length > 0)
+      return { answer, options }
+    }
+  }
+  // If no pattern found, return the whole response as answer with no options
+  return { answer: response, options: [] }
+}
+
+// Components
+function ProfileSection({ username, profileAvatar, fallbackPic }: { username: string, profileAvatar: string, fallbackPic: string }) {
+  return (
+    <div className="bg-white/30 border-t border-white/30 backdrop-blur-sm p-4 flex-shrink-0 mt-auto">
+      <div className="flex items-center gap-3">
+        <Avatar className="w-8 h-8">
+          <AvatarImage src={profileAvatar || fallbackPic} />
+          <AvatarFallback className="bg-gray-900 text-white">
+            <User className="w-4 h-4" />
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-gray-600 truncate">
+            Hey <span className="font-semibold text-gray-900">{username}</span>
+          </p>
+          <p className="text-xs text-gray-500 truncate">Ready to explore?</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Sidebar({
+  activeSection,
+  onSectionClick,
+  unlockedFeatures,
+  username,
+  profileAvatar,
+  fallbackPic,
+}: {
+  activeSection: string
+  onSectionClick: (sectionId: string) => void
+  unlockedFeatures: string[]
+  username: string
+  profileAvatar: string
+  fallbackPic: string
+}) {
+  const unlockedReports = reportSections.filter((section) => unlockedFeatures.includes(section.id))
+  const lockedReports = reportSections.filter((section) => !unlockedFeatures.includes(section.id))
+
+  const renderSection = (items: typeof chatSections, title: string, titleIcon: any, showLock = false) => {
+    const TitleIcon = titleIcon
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2 px-4 py-2 mb-2">
+          <TitleIcon className="w-4 h-4 text-gray-600" />
+          <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{title}</h3>
+        </div>
+        <div className="space-y-1">
+          {items.map((item) => {
+            const isUnlocked = unlockedFeatures.includes(item.id)
+            const isActive = activeSection === item.id
+            const Icon = item.icon
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => onSectionClick(item.id)}
+                className={cn(
+                  "w-full p-3 text-left transition-all duration-150 group relative rounded-xl shadow-sm mb-2 bg-white/70 backdrop-blur-md border border-white/30 hover:bg-white/80",
+                  isActive && isUnlocked ? "bg-purple-100/80 shadow-md" : "",
+                  !isUnlocked && "opacity-60",
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={cn("p-1.5 bg-gray-100/70 rounded", isActive && isUnlocked ? "bg-gray-200/70" : "")}>
+                    <Icon className={cn("w-4 h-4", item.color)} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-gray-900 text-sm">{item.label}</h4>
+                      {showLock && !isUnlocked && <Lock className="w-3 h-3 text-gray-400" />}
+                    </div>
+                    <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{item.description}</p>
+                  </div>
+                </div>
+
+                {showLock && !isUnlocked && (
+                  <div className="absolute inset-0 bg-white/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-xl backdrop-blur-sm">
+                    <div className="bg-gray-900 text-white px-3 py-1 text-xs font-medium rounded-full">Pro Feature</div>
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="w-80 bg-white/20 backdrop-blur-xl border-r border-white/30 flex flex-col overflow-hidden rounded-r-3xl">
+      <div className="p-6 border-b border-white/30 text-center">
+        <h1 className="text-xl font-bold text-gray-900 tracking-tight">ETERNAL AI</h1>
+      </div>
+
+      <div className="flex-1 px-2 py-4 overflow-y-auto flex flex-col items-center">
+        {renderSection(chatSections, "Chat", MessageCircle)}
+        {unlockedReports.length > 0 && renderSection(unlockedReports, "Available Reports", FileText)}
+        {lockedReports.length > 0 && renderSection(lockedReports, "Pro Reports", Lock, true)}
+      </div>
+
+      <ProfileSection username={username} profileAvatar={profileAvatar} fallbackPic={fallbackPic} />
+    </div>
+  )
+}
+
+function Header({ activeSection, onProfileClick, profileAvatar, fallbackPic }: { activeSection: string; onProfileClick: () => void; profileAvatar: string; fallbackPic: string }) {
+  return (
+    <div className="h-12 bg-white/15 backdrop-blur-xl border-b border-white/20 flex items-center justify-between px-6 flex-shrink-0 mx-4 mt-4 rounded-2xl">
+      <div className="w-80 flex items-center">
+        <h2 className="text-base font-semibold text-gray-700">{sectionTitles[activeSection] || "Select a Reading"}</h2>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-1.5 hover:bg-white/20 px-2 py-1 text-gray-500 hover:text-gray-700 bg-white/10 backdrop-blur-sm rounded-lg text-xs h-7"
+        >
+          <ArrowLeft className="w-3 h-3" />
+          <span className="text-xs font-medium">Dashboard</span>
+        </Button>
+
+        <div className="flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-sm rounded-lg border border-white/20">
+          <Coins className="w-3 h-3 text-purple-400" />
+          <span className="text-xs font-bold text-purple-500">250</span>
+          <span className="text-xs text-purple-400">credits</span>
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onProfileClick}
+          className="flex items-center gap-1.5 hover:bg-white/20 px-2 py-1 h-7 bg-white/10 backdrop-blur-sm rounded-lg"
+        >
+          <Avatar className="w-5 h-5">
+            <AvatarImage src={profileAvatar || fallbackPic} />
+            <AvatarFallback className="bg-gray-600 text-white text-xs">
+              <User className="w-2.5 h-2.5" />
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-xs font-medium text-gray-600">Profile</span>
+          <ChevronDown className="w-2.5 h-2.5 text-gray-400" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function ChatArea({ activeSection }: { activeSection: string }) {
+  const [messages, setMessages] = useState<Message[]>([getInitialMessage(activeSection)])
+  const [inputValue, setInputValue] = useState("")
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const { currentUser } = useAuth();
-  
-  // Get path from URL params
-  const urlParams = new URLSearchParams(location.search);
-  const pathType = urlParams.get('path') as 'vibrational' | 'karmic' | 'aura' | null;
-  
-  // State management
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([]);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [currentSection, setCurrentSection] = useState(0);
-  const [answers, setAnswers] = useState<any>({});
-  const [generatingReport, setGeneratingReport] = useState(false);
-  const [profile, setProfile] = useState<any>({});
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [showReportsModal, setShowReportsModal] = useState(false);
+  const autoSentRef = useRef(false); // Prevent double auto-send
 
-  // Enhanced validation state
-  const [validationState, setValidationState] = useState<ValidationState>({
-    isValidating: false,
-    error: null,
-    attempts: 0,
-    maxAttempts: 2
-  });
-
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Helper function to get current question
-  const getCurrentQuestion = () => {
-    if (pathType === 'vibrational') {
-      const section = vibrationalQuestions[currentSection];
-      return section?.questions[currentStep]?.text || '';
-    } else if (pathType === 'karmic' && currentStep < karmicQuestions.length) {
-      return karmicQuestions[currentStep].text;
-    } else if (pathType === 'aura' && currentStep < auraQuestions.length) {
-      return auraQuestions[currentStep].text;
-    }
-    return '';
-  };
-
-  // Helper function to determine question type
-  const getQuestionType = () => {
-    if (pathType === 'vibrational') return 'vibrational';
-    if (pathType === 'aura') return 'aura';
-    if (pathType === 'karmic') return 'spiritual';
-    return 'general';
-  };
-
-  // Input validation helper for real-time feedback
-  const validateInputLength = (input: string) => {
-    if (input.length === 0) return null;
-    if (input.length < 3) return "A bit more detail would help us understand your energy better...";
-    if (input.length > 500) return "That's wonderfully detailed! You might want to summarize your key points.";
-    return null;
-  };
-
-  // Initialize chat based on path
   useEffect(() => {
-    if (!pathType || !currentUser) return;
-    
-    const initializeChat = async () => {
-      // Fetch user profile
-      const profileRef = doc(db, 'YourSoulAnswers', currentUser.uid);
-      const profileSnap = await getDoc(profileRef);
-      if (profileSnap.exists()) {
-        setProfile(profileSnap.data());
-      }
-      
-      // Initialize based on path type
-      switch (pathType) {
-        case 'vibrational':
-          setMessages([
-            { role: 'assistant', content: 'Vibrational Frequency Assessment' },
-            { role: 'assistant', content: "Hey there! Ready to discover your vibrational vibe level? Just 2 minutes and I'll generate your custom report.\nLet's begin!" },
-            { role: 'assistant', content: 'Section 1: Mood & Mindset (Q1-Q3)\nLet\'s check your inner world first.' },
-            { role: 'assistant', content: vibrationalQuestions[0].questions[0].text }
-          ]);
-          break;
-          
-        case 'karmic':
-          setMessages([
-            { role: 'assistant', content: 'Karmic Awareness Reading' },
-            { role: 'assistant', content: 'Welcome to your Karmic Awareness journey! I\'ll ask you 3 specific questions to create your personalized Jyotish reading.' },
-            { role: 'assistant', content: karmicQuestions[0].text }
-          ]);
-          break;
-          
-        case 'aura':
-          setMessages([
-            { role: 'assistant', content: 'Aura Perception Analysis' },
-            { role: 'assistant', content: 'Welcome to your Aura reading! I\'ll guide you through 4 questions to analyze your energy field and reveal your dominant aura colors.' },
-            { role: 'assistant', content: auraQuestions[0].text }
-          ]);
-          break;
-      }
-    };
-    
-    initializeChat();
-  }, [pathType, currentUser]);
+    setMessages([getInitialMessage(activeSection)])
+    autoSentRef.current = false;
+  }, [activeSection])
 
-  // Enhanced handle message sending with comprehensive validation
-  const handleSendMessage = async () => {
-    if (!message.trim() || !pathType || !currentUser) return;
-    
-    // Always validate responses for all paths
-    if (!validationState.isValidating) {
-      setValidationState(prev => ({ ...prev, isValidating: true, error: null }));
+  // Remove the auto-send useEffect for 'ask-about-today'.
+
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      // Try multiple selectors to find the scrollable element
+      const scrollContainer = scrollAreaRef.current.querySelector("[data-radix-scroll-area-viewport]") || 
+                            scrollAreaRef.current.querySelector(".overflow-auto") ||
+                            scrollAreaRef.current
       
-      try {
-        const currentQuestion = getCurrentQuestion();
-        const chatContext = {
-          pathType,
-          currentStep,
-          currentSection,
-          questionNumber: currentStep + 1
-        };
-        
-        // Validate the response using GPT
-        const validation = await validateChatHomeResponse(currentQuestion, message.trim(), chatContext) as any;
-        
-        setValidationState(prev => ({ ...prev, isValidating: false }));
-        
-        if (!validation.isValid) {
-          // Generate user-friendly feedback
-          const feedback = generateValidationFeedback(validation, pathType) as ValidationFeedback;
-          setValidationState(prev => ({ 
-            ...prev, 
-            error: feedback, 
-            attempts: prev.attempts + 1 
-          }));
-          
-          // After max attempts, be more lenient
-          if (validationState.attempts >= validationState.maxAttempts - 1) {
-            setValidationState(prev => ({
-              ...prev,
-              error: {
-                ...feedback,
-                type: 'info',
-                title: 'We appreciate your effort',
-                message: "We appreciate your effort. You can continue with your response or try refining it once more.",
-                allowProceed: true
-              }
-            }));
-          }
-          
-          return; // Don't proceed with invalid response unless allowProceed is true
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+      }
+    }
+  }
+
+  useEffect(() => {
+    // Smooth auto-scroll with multiple attempts to ensure it works
+    const timer1 = setTimeout(() => {
+      scrollToBottom()
+    }, 50)
+    
+    const timer2 = setTimeout(() => {
+      scrollToBottom()
+    }, 150)
+    
+    const timer3 = setTimeout(() => {
+      scrollToBottom()
+    }, 300)
+    
+    return () => {
+      clearTimeout(timer1)
+      clearTimeout(timer2)
+      clearTimeout(timer3)
+    }
+  }, [messages])
+
+  const handleSendMessage = async (messageText?: string) => {
+    const textToSend = messageText || inputValue.trim()
+    if (!textToSend) return
+
+    const userMessage: Message = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+      type: "user",
+      content: textToSend,
+      timestamp: new Date(),
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    if (!messageText) {
+      setInputValue("")
+    }
+
+    // Remove options from the last AI message when a new message is sent
+    setMessages((prev) => 
+      prev.map((msg, index) => 
+        index === prev.length - 2 && msg.type === "ai" 
+          ? { ...msg, options: undefined }
+          : msg
+      )
+    )
+
+    // Add a typing indicator
+    const typingMessage: Message = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+      type: "ai",
+      content: "Typing...",
+      timestamp: new Date(),
+    }
+
+    // Add typing indicator after a short delay
+    setTimeout(() => {
+      setMessages((prev) => [...prev, typingMessage])
+    }, 300)
+
+    try {
+      // Fetch user's Vedic astrology data from Firebase
+      let vedicData = null;
+      if (currentUser?.uid) {
+        const karmicReportDoc = await getDoc(doc(db, 'karmicReports', currentUser.uid));
+        if (karmicReportDoc.exists()) {
+          vedicData = karmicReportDoc.data();
         }
-        
-        // Reset validation state on successful validation
-        setValidationState(prev => ({
-          ...prev,
-          isValidating: false,
-          error: null,
-          attempts: 0,
-          maxAttempts: 2
-        }));
-        
-      } catch (error) {
-        console.error('Validation error:', error);
-        setValidationState(prev => ({ 
-          ...prev, 
-          isValidating: false,
-          error: {
-            type: 'warning',
-            title: 'Validation Temporarily Unavailable',
-            message: 'Unable to validate response right now. Please ensure your answer is meaningful and continue.',
-            allowProceed: true
-          }
-        }));
-      }
-    }
-    
-    // Process the valid response
-    await processValidResponse(message.trim());
-  };
-
-  // Process valid response and continue with the flow
-  const processValidResponse = async (validAnswer: string) => {
-    const userMsg = { role: 'user' as const, content: validAnswer };
-    setMessages(prev => [...prev, userMsg]);
-    setValidationState(prev => ({ ...prev, attempts: 0 }));
-    
-    if (pathType === 'vibrational') {
-      await handleVibrationalFlow(validAnswer);
-    } else if (pathType === 'karmic') {
-      await handleKarmicFlow(validAnswer);
-    } else if (pathType === 'aura') {
-      await handleAuraFlow(validAnswer);
-    }
-    
-    setMessage('');
-  };
-
-  // Vibrational flow handler
-  const handleVibrationalFlow = async (answer: string) => {
-    const section = vibrationalQuestions[currentSection];
-    const question = section.questions[currentStep];
-    
-    // Store answer
-    const newAnswers = { ...answers, [`${currentSection}_${currentStep}`]: answer };
-    setAnswers(newAnswers);
-    
-    // Move to next question
-    if (currentStep < section.questions.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', content: section.questions[currentStep + 1].text }]);
-      }, 600);
-    } else if (section.encouragement && currentSection < vibrationalQuestions.length - 1) {
-      // Move to next section
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'assistant', content: section.encouragement! }]);
-        setTimeout(() => {
-          setCurrentSection(currentSection + 1);
-          setCurrentStep(0);
-          const nextSection = vibrationalQuestions[currentSection + 1];
-          setMessages(prev => [...prev, 
-            { role: 'assistant', content: `Section ${currentSection + 2}: ${nextSection.section}\n${getSectionDescription(currentSection + 1)}` },
-            { role: 'assistant', content: nextSection.questions[0].text }
-          ]);
-        }, 1200);
-      }, 600);
-    } else {
-      // Complete assessment
-      await completeVibrationalAssessment(newAnswers);
-    }
-  };
-
-  const getSectionDescription = (sectionIndex: number) => {
-    const descriptions = [
-      "Let's check your inner world first.",
-      "Let's feel into your body and soul...",
-      "Time to check the vibes around you..."
-    ];
-    return descriptions[sectionIndex] || "";
-  };
-
-  const completeVibrationalAssessment = async (finalAnswers: any) => {
-    setGeneratingReport(true);
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: 'All done! Based on your answers, I\'m tuning into your current vibrational frequency... One sec!' 
-    }]);
-
-    try {
-      // Store answers in Firebase
-      await setDoc(doc(db, 'vibrationalAnswers', currentUser.uid), {
-        answers: finalAnswers,
-        timestamp: serverTimestamp()
-      });
-
-      // Generate report using GPT-4.1
-      const reportData = await generateVibrationalReport(finalAnswers);
-      
-      // Store report in Firebase
-      await setDoc(doc(db, 'vibrationalReports', currentUser.uid), {
-        ...reportData,
-        generatedAt: serverTimestamp()
-      });
-
-      navigate('/vibrational-report');
-    } catch (error) {
-      console.error('Error generating vibrational report:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, there was an error generating your report. Please try again.' 
-      }]);
-      setGeneratingReport(false);
-    }
-  };
-
-  // Karmic flow handler with validation
-  const handleKarmicFlow = async (answer: string) => {
-    const currentQuestion = karmicQuestions[currentStep];
-    const newAnswers = { ...answers, [currentQuestion.key]: answer };
-    setAnswers(newAnswers);
-
-    if (currentStep < karmicQuestions.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: karmicQuestions[currentStep + 1].text 
-        }]);
-      }, 600);
-    } else {
-      await completeKarmicAssessment(newAnswers);
-    }
-  };
-
-  const completeKarmicAssessment = async (finalAnswers: any) => {
-    setGeneratingReport(true);
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: 'Thank you for your responses! I\'m now consulting the cosmic energies and generating your personalized Jyotish reading. This may take a moment...' 
-    }]);
-
-    try {
-      // Prepare birth data
-      const birthData = {
-        location: finalAnswers.birthPlace || profile.location || 'Delhi, India',
-        dob: formatDateForAPI(profile.dateOfBirth),
-        tob: formatTimeForAPI(profile.timeOfBirth, profile.timeFormat),
-        timezone: '+05:30'
-      };
-
-      const astrologyResult = await getVedastroDataAndImage(birthData) as VedastroResult | string;
-
-      if (typeof astrologyResult === 'string') {
-        throw new Error('Failed to fetch astrology data');
       }
 
-      await setDoc(doc(db, 'vedastroData', currentUser.uid), {
-        astrologyData: astrologyResult.astrologyData,
-        chartImages: astrologyResult.chartImages,
-        birthData,
-        timestamp: serverTimestamp()
-      });
+      // Create the context for the API call
+      const reportContext = {
+        availableReports: [activeSection],
+        auraReport: null,
+        vibrationalReport: null,
+        karmicReport: vedicData ? {
+          birthPlace: vedicData.birthPlace || 'Unknown',
+          lifeArea: vedicData.lifeArea || 'General',
+          challenge: vedicData.challenge || 'Unknown',
+          jyotishReading: vedicData.jyotishReading || '',
+          birthData: vedicData.birthData || {},
+          vedicApi: vedicData.vedicApi || {},
+          rapidApi: vedicData.rapidApi || {}
+        } : null
+      }
 
-      // Generate Jyotish reading with GPT-4.1
-      const jyotishReading = await generateJyotishReading({
-        astrologyData: astrologyResult.astrologyData,
-        userResponses: finalAnswers,
-        birthData: birthData
-      });
+      // Create a comprehensive prompt for Eternal AI
+      const enhancedPrompt = `You are Eternal, an AI agent that helps people find their spiritual paths. \n\nUSER'S VEDIC ASTROLOGY DATA:\n${vedicData ? `\nBirth Details:\n- Place: ${vedicData.birthPlace || 'Unknown'}\n- Date: ${vedicData.birthData?.dob || 'Unknown'}\n- Time: ${vedicData.birthData?.tob || 'Unknown'}\n- Timezone: ${vedicData.birthData?.timezone || 'Unknown'}\n- Life Area Focus: ${vedicData.lifeArea || 'General'}\n\nVedic Astrology Reading:\n${vedicData.jyotishReading || 'No reading available'}\n\nVedic API Data:\n${JSON.stringify(vedicData.vedicApi || {}, null, 2)}\n\nNumerology Data:\n${JSON.stringify(vedicData.rapidApi || {}, null, 2)}\n` : 'No Vedic astrology data available for this user.'}\n\nUSER QUERY: "${textToSend}"\n\nPlease provide a helpful, spiritual, and personalized response based on the user's Vedic astrology data and their question. Be encouraging, insightful, and practical. Connect the user's question with their astrological profile when relevant. Keep responses conversational and warm, as if you're a wise spiritual guide.\n\nAfter your response, provide 3-4 follow-up questions that the user could ask next to continue their spiritual exploration. Format these as clickable options.`
 
-      // Store complete karmic report
-      await setDoc(doc(db, 'karmicReports', currentUser.uid), {
-        ...finalAnswers,
-        birthData,
-        astrologyData: astrologyResult.astrologyData,
-        chartImages: astrologyResult.chartImages,
-        jyotishReading,
-        generatedAt: serverTimestamp()
-      });
+      // Debug logging
+      console.log('[EternalAI] Sending prompt to backend:', { enhancedPrompt, reportContext, userId: currentUser?.uid || 'user' });
 
-      navigate('/karmic-report');
-    } catch (error) {
-      console.error('Error generating karmic report:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'I apologize, but there was an error generating your reading. Please try again or contact support.' 
-      }]);
-      setGeneratingReport(false);
+      const handler = generateReportWithVision;
+      const apiResponse = await handler(textToSend);
+
+      // Debug logging
+      console.log('[EternalAI] Received response from backend:', apiResponse);
+
+      // Store the raw response as the message content (no parsing/options)
+      setMessages((prev) => {
+        const filtered = prev.filter(msg => msg.id !== typingMessage.id)
+        return [...filtered, {
+          id: (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+          type: "ai",
+          content: apiResponse,
+          options: undefined,
+          timestamp: new Date(),
+        }]
+      })
+    } catch (error: any) {
+      // Debug logging
+      console.error('[EternalAI] Error during chatWithReports:', error);
+      // Remove typing indicator and show error message as AI response
+      setMessages((prev) => {
+        const filtered = prev.filter(msg => msg.id !== typingMessage.id)
+        return [...filtered, {
+          id: (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+          type: "ai",
+          content: `Sorry, there was an error connecting to Eternal AI. ${error?.message ? 'Details: ' + error.message : 'Please try again later.'}`,
+          options: [],
+          timestamp: new Date(),
+        }]
+      })
     }
-  };
+  }
 
-  // Aura flow handler
-  const handleAuraFlow = async (answer: string) => {
-    const newAnswers = { ...answers, [`question_${currentStep + 1}`]: answer };
-    setAnswers(newAnswers);
-
-    if (currentStep < auraQuestions.length - 1) {
-      setCurrentStep(currentStep + 1);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: auraQuestions[currentStep + 1].text 
-        }]);
-      }, 600);
-    } else {
-      await completeAuraAssessment(newAnswers);
-    }
-  };
-
-  const completeAuraAssessment = async (finalAnswers: any) => {
-    setGeneratingReport(true);
-    setMessages(prev => [...prev, { 
-      role: 'assistant', 
-      content: 'Perfect! I\'m now analyzing your energy field and revealing your aura colors. This will just take a moment...' 
-    }]);
-
-    try {
-      // Store answers in Firebase
-      await setDoc(doc(db, 'auraAnswers', currentUser.uid), {
-        answers: finalAnswers,
-        timestamp: serverTimestamp()
-      });
-
-      // Generate aura report using GPT-4.1
-      const auraReport = await generateAuraReport(finalAnswers);
-      
-      // Store report in Firebase
-      await setDoc(doc(db, 'auraReports', currentUser.uid), {
-        ...auraReport,
-        generatedAt: serverTimestamp()
-      });
-
-      navigate('/aura-report');
-    } catch (error) {
-      console.error('Error generating aura report:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, there was an error generating your aura report. Please try again.' 
-      }]);
-      setGeneratingReport(false);
-    }
-  };
-
-  // Handle follow-up for vibrational path
-  // Removed handleFollowUp function
+  const handleOptionClick = (option: string) => {
+    // Remove options from the current AI message immediately when an option is clicked
+    setMessages((prev) => 
+      prev.map((msg, index) => 
+        index === prev.length - 1 && msg.type === "ai" 
+          ? { ...msg, options: undefined }
+          : msg
+      )
+    )
+    
+    handleSendMessage(option)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
     }
-  };
-
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  useEffect(() => {
-    document.body.classList.toggle('dark-mode', darkMode);
-  }, [darkMode]);
-
-  // Enhanced validation feedback UI component
-  const renderValidationFeedback = () => {
-    if (!validationState.error) return null;
-
-    const error = validationState.error;
-
-    return (
-      <div className="validation-feedback mb-3" style={{ maxWidth: '100%', margin: '0 auto' }}>
-        <div 
-          className={`alert alert-${error.type === 'error' ? 'danger' : error.type === 'info' ? 'info' : 'warning'} border-0 shadow-sm`}
-          style={{ 
-            background: error.type === 'error' ? 'linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%)' :
-                       error.type === 'info' ? 'linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)' :
-                       'linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%)',
-            borderRadius: '12px',
-            animation: 'slideInFromTop 0.3s ease-out'
-          }}
-        >
-          <div className="d-flex align-items-start">
-            {/* Icon */}
-            <div className="me-3">
-              {error.icon ? (
-                <span style={{ fontSize: '1.5rem' }}>{error.icon}</span>
-              ) : (
-                <i className={`bi ${
-                  error.type === 'error' ? 'bi-x-circle-fill text-danger' :
-                  error.type === 'info' ? 'bi-info-circle-fill text-info' :
-                  'bi-exclamation-triangle-fill text-warning'
-                }`} style={{ fontSize: '1.5rem' }}></i>
-              )}
-            </div>
-            
-            {/* Content */}
-            <div className="flex-grow-1">
-              <div className="fw-bold mb-1">{error.title}</div>
-              <div className="mb-2">{error.message}</div>
-              
-              {/* Encouragement */}
-              {error.encouragement && (
-                <div className="p-2 rounded mb-2" 
-                     style={{ 
-                       background: 'rgba(106, 27, 154, 0.1)', 
-                       color: '#6a1b9a',
-                       fontSize: '0.9rem',
-                       fontStyle: 'italic'
-                     }}>
-                  💫 {error.encouragement}
-                </div>
-              )}
-              
-              {/* Tips for better responses */}
-              {error.showTips && (
-                <details className="mt-2">
-                  <summary className="text-muted small fw-bold" style={{ cursor: 'pointer' }}>
-                    💡 Tips for meaningful responses
-                  </summary>
-                  <ul className="small text-muted mt-2 mb-0">
-                    <li>Share your genuine thoughts and feelings</li>
-                    <li>Describe your personal experiences</li>
-                    <li>Be authentic - there are no wrong spiritual answers</li>
-                    <li>Use at least a few words to express yourself</li>
-                  </ul>
-                </details>
-              )}
-              
-              {/* Action buttons */}
-              <div className="mt-3 d-flex gap-2">
-                {error.allowProceed && (
-                  <button 
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => {
-                      setValidationState(prev => ({ ...prev, error: null }));
-                      processValidResponse(message.trim());
-                    }}
-                  >
-                    Continue with this response
-                  </button>
-                )}
-                <button 
-                  className="btn btn-sm btn-primary"
-                  onClick={() => setValidationState(prev => ({ ...prev, error: null }))}
-                >
-                  Let me try again
-                </button>
-              </div>
-            </div>
-            
-            {/* Close button */}
-            <button 
-              className="btn-close ms-2" 
-              onClick={() => setValidationState(prev => ({ 
-                ...prev, 
-                error: null, 
-                attempts: 0 
-              }))}
-            ></button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced validation loading indicator
-  const renderValidationLoading = () => {
-    if (!validationState.isValidating) return null;
-
-    const loadingMessages = {
-      vibrational: '🔮 Analyzing your vibrational response...',
-      aura: '✨ Reading your energy signature...',
-      karmic: '🌙 Consulting cosmic wisdom...',
-      general: '💫 Validating your spiritual response...'
-    };
-
-    return (
-      <div className="text-center mb-3" style={{ maxWidth: '100%', margin: '0 auto' }}>
-        <div className="d-flex align-items-center justify-content-center p-3 bg-light rounded-3">
-          <div className="spinner-border spinner-border-sm text-primary me-2" role="status">
-            <span className="visually-hidden">Validating...</span>
-          </div>
-          <span className="text-muted">
-            {loadingMessages[pathType || 'general']}
-          </span>
-        </div>
-      </div>
-    );
-  };
-
-  // Enhanced input bar with comprehensive validation feedback
-  const renderInputBar = () => {
-    const lengthHint = validateInputLength(message);
-    const showInputValidation = true; // Always show validation for all paths
-    
-    return (
-      <div className="mt-auto">
-        {/* Real-time length feedback */}
-        {lengthHint && (
-          <div className="text-center mb-2">
-            <small className="text-muted" style={{ fontSize: '0.85rem' }}>
-              {lengthHint}
-            </small>
-          </div>
-        )}
-        
-        <div 
-          className={`d-flex align-items-center bg-white rounded-pill shadow-sm px-3 py-2 ${
-            validationState.error ? 'border-warning' : ''
-          }`}
-          style={{ 
-            border: validationState.error ? '1.5px solid #ffb74d' : 'none',
-            boxShadow: validationState.error ? 
-              '0 2px 8px rgba(255, 183, 77, 0.3)' : 
-              '0 2px 8px rgba(80, 0, 120, 0.06)',
-            transition: 'all 0.2s',
-            maxWidth: '100%'
-          }}
-        >
-          <button className="btn btn-link text-muted me-2 p-0" title="Attach file">
-            <i className="bi bi-paperclip"></i>
-          </button>
-          
-          <input
-            type="text"
-            className="form-control border-0 px-2 spiritual-input"
-            placeholder={
-              validationState.error ? "Let's try a more detailed response..." :
-              "Share your authentic thoughts and feelings..."
-            }
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={validationState.isValidating}
-            style={{ 
-              background: 'transparent', 
-              boxShadow: 'none',
-              opacity: validationState.isValidating ? 0.7 : 1
-            }}
-          />
-          
-          <button className="btn btn-link text-muted mx-2 p-0" title="Record audio">
-            <i className="bi bi-mic-fill"></i>
-          </button>
-          
-          <button
-            className="btn rounded-circle d-flex align-items-center justify-content-center"
-            style={{ 
-              width: '38px', 
-              height: '38px',
-              opacity: validationState.isValidating ? 0.7 : 1,
-              background: 'linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%)',
-              color: '#fff',
-              border: 'none',
-              boxShadow: '0 2px 8px rgba(80, 0, 120, 0.10)'
-            }}
-            onClick={handleSendMessage}
-            disabled={!message.trim() || validationState.isValidating}
-            title="Send"
-          >
-            {validationState.isValidating ? (
-              <div className="spinner-border spinner-border-sm" role="status">
-                <span className="visually-hidden">Validating...</span>
-              </div>
-            ) : (
-              <i className="bi bi-arrow-up"></i>
-            )}
-          </button>
-        </div>
-        
-        {/* Character/word count for longer responses */}
-        {message.length > 20 && (
-          <div className="text-center mt-1">
-            <small className="text-muted" style={{ fontSize: '0.8rem' }}>
-              {message.length} characters • {message.split(' ').filter(w => w.length > 0).length} words
-            </small>
-          </div>
-        )}
-        
-        {/* Attempt counter */}
-        {validationState.attempts > 0 && (
-          <div className="text-center mt-1">
-            <small className="text-muted">
-              Attempt {validationState.attempts + 1} of {validationState.maxAttempts}
-            </small>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  if (!pathType) {
-    return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{ background: '#f7f7fa' }}>
-        <div className="text-center">
-          <h3>Invalid Path</h3>
-          <p>Please select a valid spiritual assessment path.</p>
-          <button className="btn btn-primary" onClick={() => navigate('/onboarding-one')}>
-            Choose Path
-          </button>
-        </div>
-      </div>
-    );
   }
 
-    return (
-    <div className="d-flex" style={{ minHeight: '100vh', background: '#f7f7fa' }}>
-      {/* Enhanced CSS with validation styles */}
-      <style>{`
-        @keyframes moveBar {
-          0% { margin-left: -30%; }
-          100% { margin-left: 100%; }
-        }
-        
-        @keyframes slideInFromTop {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        .validation-feedback {
-          animation: slideInFromTop 0.3s ease-out;
-        }
-        
-        .spiritual-input:focus {
-          border-color: #6a1b9a !important;
-          box-shadow: 0 0 0 0.2rem rgba(106, 27, 154, 0.25) !important;
-        }
-        
-        .btn-outline-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(106, 27, 154, 0.3);
-        }
-        
-        body.dark-mode {
-          background: #232346 !important;
-          color: #e0e0e0 !important;
-        }
-        
-        body.dark-mode .sidebar {
-          background: #232346 !important;
-          color: #f3f3fa !important;
-          border-right: 1.5px solid #34345a;
-          box-shadow: 2px 0 16px 0 rgba(20,20,40,0.12);
-        }
-        
-        body.dark-mode .bg-white, body.dark-mode .navbar, body.dark-mode .form-control {
-          background: #26263a !important;
-          color: #e0e0e0 !important;
-          border: none !important;
-        }
-        
-        body.dark-mode .form-control::placeholder {
-          color: #b0b0d0 !important;
-        }
-        
-        body.dark-mode .rounded-4.shadow-sm.p-4.mb-4.overflow-auto {
-          background: #26263a !important;
-          box-shadow: 0 2px 16px 0 rgba(20,20,40,0.10);
-        }
-        
-        body.dark-mode .btn.btn-primary.rounded-circle {
-          background: #7c3aed !important;
-          border: none !important;
-          color: #fff !important;
-          box-shadow: 0 2px 8px 0 rgba(124,58,237,0.10);
-        }
-        
-        /* Responsive sidebar behavior */
-        @media (min-width: 768px) {
-          .sidebar {
-            position: fixed !important;
-            left: 0 !important;
-            height: 100vh !important;
-            transform: none !important;
-            z-index: 1000 !important;
-          }
-          
-          .sidebar-backdrop {
-            display: none !important;
-          }
-          
-          .main-chat-area {
-            margin-left: 270px !important;
-            width: calc(100% - 270px) !important;
-            max-width: none !important;
-          }
-          
-          .chat-container {
-            max-width: 100% !important;
-            margin: 0 auto !important;
-            padding: 0 20px !important;
-          }
-        }
-        
-        @media (max-width: 767px) {
-          .sidebar {
-            position: fixed !important;
-            left: -290px !important;
-          }
-          
-          .sidebar.open {
-            left: 0 !important;
-          }
-          
-          .main-chat-area {
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-          
-          .chat-container {
-            max-width: 100% !important;
-            margin: 0 auto !important;
-            padding: 0 15px !important;
-          }
-        }
-      `}</style>
-
-      {/* Left Sidebar - Desktop: always visible, Mobile: toggleable */}
-      <nav className={`sidebar d-flex flex-column p-3 position-fixed h-100 d-md-block${sidebarOpen ? ' open' : ''}`} 
-           style={{ 
-             width: '270px', 
-             background: '#fff', 
-             borderRadius: '18px', 
-             boxShadow: '0 4px 32px rgba(60,0,80,0.08)', 
-             zIndex: 1050, 
-             left: sidebarOpen ? 0 : '-290px', 
-             transition: 'left 0.3s, box-shadow 0.3s', 
-             border: 'none'
-           }}>
-        
-        {/* User profile at top */}
-        <div className="d-flex align-items-center mb-4 p-2" 
-             style={{ background: 'linear-gradient(90deg, #ede7f6 0%, #f3e8ff 100%)', borderRadius: '12px' }}>
-          <img 
-            src={profile.profileImage || '/default-avatar.png'} 
-            alt={profile.name || 'User'} 
-            className="rounded-circle me-2" 
-            style={{ border: '2px solid #a084e8', width: 38, height: 38, objectFit: 'cover', boxShadow: '0 2px 8px #e0d7fa' }} 
-          />
-          <div>
-            <div className="fw-semibold" style={{ color: '#4b1fa7', fontSize: 15 }}>
-              {profile.name || 'User'}
-            </div>
-            <div className="text-muted" style={{ fontSize: 12 }}>Online</div>
-          </div>
-        </div>
-        
-        {/* Branding */}
-        <div className="mb-4 text-center">
-          <span className="fw-bold" 
-                style={{ 
-                  fontSize: 22, 
-                  background: 'linear-gradient(90deg, #7c3aed 0%, #4b1fa7 100%)', 
-                  WebkitBackgroundClip: 'text', 
-                  WebkitTextFillColor: 'transparent', 
-                  letterSpacing: '1px', 
-                  textShadow: '0 2px 8px #e0d7fa' 
-                }}>
-            Eternal AI
-          </span>
-        </div>
-        
-        <ul className="nav nav-pills flex-column mb-auto gap-1">
-          <li className="nav-item mb-1">
-            <button className="btn w-100 py-2 rounded-3 d-flex align-items-center justify-content-start" 
-                    style={{ 
-                      background: '#3d1975', 
-                      color: '#fff', 
-                      fontWeight: 500, 
-                      boxShadow: '0 2px 8px rgba(61,25,117,0.08)', 
-                      transition: 'background 0.2s' 
-                    }}>
-              <i className="bi bi-chat-dots me-2" style={{ fontSize: 18 }}></i> New Chat
-            </button>
-          </li>
-          <li className="mb-1">
-            <div className="input-group">
-              <span className="input-group-text bg-transparent border-0 pe-0" style={{ color: '#b0b0b0' }}>
-                <i className="bi bi-search"></i>
-              </span>
-              <input type="text" className="form-control bg-transparent border-0" 
-                     style={{ color: '#888', fontSize: 15 }} placeholder="Search Chats" />
-            </div>
-          </li>
-          <li className="mb-1">
-            <a href="#" className="nav-link d-flex align-items-center" 
-               style={{ color: '#7c3aed', fontWeight: 500, borderRadius: 8, transition: 'background 0.2s' }}>
-              <i className="bi bi-clock-history me-2"></i> History
-            </a>
-          </li>
-          <li className="mb-1">
-            <a href="#" className="nav-link d-flex align-items-center" 
-               style={{ color: '#b0b0b0', fontWeight: 400, borderRadius: 8, transition: 'background 0.2s' }}>
-              <i className="bi bi-gear me-2"></i> Settings
-            </a>
-          </li>
-        </ul>
-        
-        <div className="card p-3 mb-3 border-0 mt-auto" 
-             style={{ 
-               background: 'linear-gradient(135deg, #4b1fa7 0%, #7c3aed 100%)', 
-               borderRadius: '18px', 
-               boxShadow: '0 2px 12px rgba(76,31,167,0.10)' 
-             }}>
-          <div className="d-flex align-items-center mb-2">
-            <span className="p-2 rounded-circle d-flex align-items-center justify-content-center" 
-                  style={{ background: 'rgba(255,255,255,0.12)', marginRight: '10px' }}>
-              <i className="bi bi-star-fill" style={{ color: '#fff700', fontSize: 18 }}></i>
-            </span>
-            <h6 className="card-title mb-0 text-white" style={{ fontWeight: 600, fontSize: 16 }}>
-              Upgrade to Pro
-            </h6>
-          </div>
-          <p className="card-text text-white-50 small mb-2" style={{ color: '#e0e0e0' }}>
-            Unlock powerful features with our pro upgrade today!
-          </p>
-          <button className="btn btn-light btn-sm rounded-pill fw-bold" 
-                  style={{ color: '#4b1fa7', transition: 'background 0.2s' }}>
-            Upgrade now <i className="bi bi-arrow-right"></i>
-          </button>
-        </div>
-      </nav>
-
-      {/* Sidebar mobile overlay backdrop */}
-      {sidebarOpen && (
-        <div className="sidebar-backdrop d-md-none" 
-             onClick={() => setSidebarOpen(false)} 
-             style={{ 
-               position: 'fixed', 
-               top: 0, 
-               left: 0, 
-               width: '100vw', 
-               height: '100vh', 
-               background: 'rgba(40,0,60,0.25)', 
-               zIndex: 1049, 
-               transition: 'background 0.3s' 
-             }} />
-      )}
-
-      {/* Sidebar toggle for mobile */}
-      <button className="btn btn-primary d-md-none position-fixed" 
-              style={{ 
-                top: 20, 
-                left: 20, 
-                zIndex: 1100, 
-                borderRadius: '50%', 
-                background: '#4a148c', 
-                border: 'none', 
-                boxShadow: '0 2px 8px rgba(60,0,80,0.12)' 
-              }} 
-              onClick={() => setSidebarOpen(!sidebarOpen)}>
-        <i className="bi bi-list" style={{ fontSize: 22 }}></i>
-      </button>
-
-      {/* Main Chat Area */}
-      <div className="flex-grow-1 d-flex flex-column main-chat-area" 
-           style={{ 
-             background: '#f7f7fa', 
-             backgroundImage: 'radial-gradient(#e0e0e0 1px, transparent 1px)', 
-             backgroundSize: '20px 20px', 
-             transition: 'margin-left 0.3s' 
-           }}>
-        
-        {/* Animated purple progress bar at top */}
-        <div style={{ 
-          height: 4, 
-          width: '100%', 
-          background: 'linear-gradient(90deg, #7c3aed 0%, #4b1fa7 100%)', 
-          position: 'sticky', 
-          top: 0, 
-          zIndex: 100, 
-          overflow: 'hidden', 
-          borderRadius: 2 
-        }}>
-          <div className="progress-bar-animated" 
-               style={{ 
-                 height: '100%', 
-                 width: '30%', 
-                 background: 'rgba(255,255,255,0.18)', 
-                 animation: 'moveBar 1.5s linear infinite' 
-               }}></div>
-        </div>
-
-        <header className="navbar navbar-expand-lg navbar-light bg-white shadow-sm p-3 mb-4 rounded-bottom" 
-                style={{ borderRadius: '0 0 15px 15px' }}>
-          <div className="d-flex align-items-center justify-content-end w-100">
-              <button 
-                className="btn btn-primary btn-sm rounded-pill me-2"
-                onClick={() => setShowReportsModal(true)}
-                style={{ 
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #4b1fa7 100%)',
-                  border: 'none',
-                  boxShadow: '0 2px 8px rgba(124, 58, 237, 0.2)'
+  return (
+    <div className="flex-1 flex flex-col relative overflow-hidden">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 relative z-10">
+        <div className="max-w-4xl mx-auto p-6 pb-32">
+          <div className="space-y-6">
+            {messages.map((message, index) => (
+              <div
+                key={message.id}
+                className={`flex gap-4 animate-in slide-in-from-bottom-4 duration-500 ${
+                  message.type === "user" ? "justify-end" : "justify-start"
+                }`}
+                style={{
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: "both",
                 }}
               >
-                <i className="bi bi-file-earmark-text me-2"></i>
-                View Reports
-              </button>
-              <button className="btn btn-light rounded-circle me-2 d-flex align-items-center justify-content-center" 
-                      style={{ width: '36px', height: '36px' }}>
-                <i className="bi bi-search"></i>
-              </button>
-              <button className="btn btn-light rounded-circle me-2 d-flex align-items-center justify-content-center" 
-                      style={{ width: '36px', height: '36px' }} 
-                      onClick={() => setDarkMode(dm => !dm)}>
-                <i className={`bi ${darkMode ? 'bi-sun-fill' : 'bi-moon-fill'}`}></i>
-              </button>
-              <button className="btn btn-light rounded-circle me-2 d-flex align-items-center justify-content-center" 
-                      style={{ width: '36px', height: '36px' }}>
-                <i className="bi bi-bell-fill"></i>
-              </button>
-          </div>
-        </header>
+                {message.type === "ai" && (
+                  <Avatar className="w-8 h-8 mt-1 flex-shrink-0">
+                    <AvatarFallback className="bg-purple-100 text-purple-500">
+                      <Sparkles className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
 
-        <div className="chat-container py-4 flex-grow-1 d-flex flex-column justify-content-between">
-          {pathType && (
-            <div className="flex-grow-1 d-flex flex-column">
-              <div className="bg-white rounded-4 shadow-sm p-4 mb-4 overflow-auto" 
-                   style={{ minHeight: '400px', maxHeight: 'calc(100vh - 300px)' }}>
-                {messages.map((msg, idx) => (
-                  <div key={idx} className={`d-flex mb-3 ${msg.role === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
-                    {msg.role === 'assistant' && (
-                      <div className="me-2">
-                        <div className="rounded-circle d-flex align-items-center justify-content-center" 
-                             style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%)' }}>
-                          <span style={{ color: 'white', fontSize: 16 }}>✨</span>
+                <div
+                  className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-sm animate-in slide-in-from-bottom-2 duration-700 ${
+                    message.type === "user"
+                      ? "bg-purple-400/80 backdrop-blur-sm text-white rounded-br-md"
+                      : "bg-white/70 backdrop-blur-sm text-gray-700 rounded-bl-md border border-white/30"
+                  }`}
+                  style={{
+                    animationDelay: `${index * 100 + 200}ms`,
+                    animationFillMode: "both",
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className={`text-xs font-medium ${message.type === "user" ? "text-purple-100" : "text-gray-500"}`}
+                    >
+                      {message.type === "user" ? "You" : "Eternal AI"}
+                    </span>
+                    <span className={`text-xs ${message.type === "user" ? "text-purple-200" : "text-gray-400"}`}>
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                  {message.type === "ai" ? (
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap font-serif prose prose-purple max-w-none">
+                      {message.content === "Typing..." ? (
+                        <div className="flex items-center gap-2 text-gray-500">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                          <span className="text-sm">AI is thinking...</span>
                         </div>
-                      </div>
-                    )}
-                    <div className={`p-3 rounded-4 ${msg.role === 'user' ? 'bg-primary text-white' : 'bg-light'}`} 
-                         style={{ maxWidth: '70%',
-                        background: msg.role === 'user' 
-                          ? 'linear-gradient(135deg, #6a1b9a 0%, #4a148c 100%)' 
-                          : undefined,
-                        color: msg.role === 'user' ? '#fff' : undefined
-                      }}>
-                      {msg.content}
+                      ) : (
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      )}
                     </div>
-                  </div>
-                ))}
-                <div ref={chatEndRef} />
-              </div>
-
-              {/* Validation Components */}
-              {renderValidationLoading()}
-              {renderValidationFeedback()}
-              
-              {/* Enhanced Input Bar */}
-              {renderInputBar()}
-
-              {/* Report Generation Loading */}
-              {generatingReport && (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary mb-3" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                  </div>
-                  <h5>Generating your personalized report...</h5>
-                  <p className="text-muted">This may take a moment while we analyze your responses.</p>
+                  ) : (
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap font-sans font-medium">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+
+                {message.type === "user" && (
+                  <Avatar className="w-8 h-8 mt-1 flex-shrink-0">
+                    <AvatarFallback className="bg-purple-100 text-purple-500">
+                      <User className="w-4 h-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </ScrollArea>
+
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg border border-white/30 p-2 flex items-center gap-2 min-w-[600px] max-w-[900px] w-[60vw] min-h-[48px] animate-in slide-in-from-bottom-4 duration-500">
+          <ReactTextareaAutosize
+            value={inputValue}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder={
+              activeSection === "ask-about-today" ? "What's on your mind today?" : "Ask about your reading..."
+            }
+            minRows={2}
+            maxRows={6}
+            className="resize-none bg-transparent border-none text-gray-700 placeholder-gray-400 focus:ring-0 rounded-xl px-4 py-2 flex-1 text-sm leading-snug"
+            style={{ boxShadow: 'none', overflow: 'hidden' }}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={!inputValue.trim()}
+            className="bg-purple-400/80 hover:bg-purple-500/80 backdrop-blur-sm text-white px-4 py-2 h-[40px] rounded-xl flex-shrink-0 transition-all duration-200 hover:scale-105"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Reports Modal */}
-      {showReportsModal && (
-        <div className="modal fade show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 2000 }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '20px' }}>
-              <div className="modal-header border-0 pb-0">
-                <h5 className="modal-title fw-bold" style={{ color: '#4b1fa7' }}>
-                  <i className="bi bi-file-earmark-text me-2"></i>
-                  Your Spiritual Reports
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => setShowReportsModal(false)}
-                ></button>
+function ProfilePanel({ isOpen, onClose, userName, userProfilePic, userEmail }: { isOpen: boolean; onClose: () => void; userName: string; userProfilePic: string; userEmail: string }) {
+  return (
+    <div
+      className={cn(
+        "fixed right-0 top-0 h-full w-80 bg-white border-l border-gray-200 shadow-lg transform transition-transform duration-200 z-50",
+        isOpen ? "translate-x-0" : "translate-x-full",
+      )}
+    >
+      <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">Account</h2>
+        <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-100">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-col h-full">
+        <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+          <div className="flex items-center gap-4">
+            <Avatar className="w-16 h-16">
+              <AvatarImage src={userProfilePic} />
+              <AvatarFallback className="bg-gray-900 text-white text-lg">
+                <User className="w-6 h-6" />
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold text-gray-900">{userName}</h3>
+              <p className="text-sm text-gray-600">{userEmail}</p>
+              <Badge variant="secondary" className="mt-1 bg-gray-100 text-gray-700 text-xs">
+                Free Plan
+              </Badge>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Usage Statistics</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Readings Completed</span>
+                  <span className="text-sm font-medium text-gray-900">3</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Days Active</span>
+                  <span className="text-sm font-medium text-gray-900">7</span>
+                </div>
+                <div className="flex items-center justify-between py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Insights Gained</span>
+                  <span className="text-sm font-medium text-gray-900">12</span>
+                </div>
               </div>
-              <div className="modal-body">
-                <div className="row g-3">
-                  {/* Aura Report */}
-                  <div className="col-12">
-                    <div 
-                      className="card border-0 shadow-sm h-100 cursor-pointer"
-                      style={{ 
-                        borderRadius: '15px',
-                        background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setShowReportsModal(false);
-                        navigate('/aura-report');
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      }}
-                    >
-                      <div className="card-body p-4">
-                        <div className="d-flex align-items-center mb-3">
-                          <div className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                               style={{ 
-                                 width: '50px', 
-                                 height: '50px', 
-                                 background: 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)' 
-                               }}>
-                            <i className="bi bi-palette-fill text-white" style={{ fontSize: '1.5rem' }}></i>
-                          </div>
-                          <div>
-                            <h6 className="mb-1 fw-bold" style={{ color: '#2e7d32' }}>Aura Report</h6>
-                            <small className="text-muted">Energy field analysis & color insights</small>
-                          </div>
-                        </div>
-                        <p className="text-muted small mb-0">
-                          Discover your aura colors, energy patterns, and spiritual signature
-                        </p>
-                      </div>
-                    </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Spiritual Progress</h4>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600">Energy Level</span>
+                    <span className="text-sm font-medium text-gray-900">75%</span>
                   </div>
-                  
-                  {/* Vibrational Report */}
-                  <div className="col-12">
-                    <div 
-                      className="card border-0 shadow-sm h-100 cursor-pointer"
-                      style={{ 
-                        borderRadius: '15px',
-                        background: 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setShowReportsModal(false);
-                        navigate('/vibrational-report');
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      }}
-                    >
-                      <div className="card-body p-4">
-                        <div className="d-flex align-items-center mb-3">
-                          <div className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                               style={{ 
-                                 width: '50px', 
-                                 height: '50px', 
-                                 background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)' 
-                               }}>
-                            <i className="bi bi-activity text-white" style={{ fontSize: '1.5rem' }}></i>
-                          </div>
-                          <div>
-                            <h6 className="mb-1 fw-bold" style={{ color: '#f57c00' }}>Vibrational Report</h6>
-                            <small className="text-muted">Frequency analysis & energy level</small>
-                          </div>
-                        </div>
-                        <p className="text-muted small mb-0">
-                          Understand your current vibrational frequency and energy state
-                        </p>
-                      </div>
-                    </div>
+                  <div className="w-full bg-gray-200 h-2">
+                    <div className="bg-gray-900 h-2 w-3/4"></div>
                   </div>
-                  
-                  {/* Karmic Report */}
-                  <div className="col-12">
-                    <div 
-                      className="card border-0 shadow-sm h-100 cursor-pointer"
-                      style={{ 
-                        borderRadius: '15px',
-                        background: 'linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onClick={() => {
-                        setShowReportsModal(false);
-                        navigate('/karmic-report');
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      }}
-                    >
-                      <div className="card-body p-4">
-                        <div className="d-flex align-items-center mb-3">
-                          <div className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                               style={{ 
-                                 width: '50px', 
-                                 height: '50px', 
-                                 background: 'linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%)' 
-                               }}>
-                            <i className="bi bi-moon-stars-fill text-white" style={{ fontSize: '1.5rem' }}></i>
-                          </div>
-                          <div>
-                            <h6 className="mb-1 fw-bold" style={{ color: '#7b1fa2' }}>Karmic Report</h6>
-                            <small className="text-muted">Jyotish reading & life predictions</small>
-                          </div>
-                        </div>
-                        <p className="text-muted small mb-0">
-                          Explore your karmic patterns, life purpose, and cosmic guidance
-                        </p>
-                      </div>
-                    </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-600">Spiritual Growth</span>
+                    <span className="text-sm font-medium text-gray-900">60%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 h-2">
+                    <div className="bg-gray-900 h-2 w-3/5"></div>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer border-0 pt-0">
-                <button 
-                  type="button" 
-                  className="btn btn-secondary rounded-pill"
-                  onClick={() => setShowReportsModal(false)}
-                >
-                  Close
-                </button>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Recent Activity</h4>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 text-sm py-2">
+                  <Star className="w-4 h-4 text-blue-600" />
+                  <span className="text-gray-700">Completed Star Map reading</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm py-2">
+                  <Zap className="w-4 h-4 text-amber-600" />
+                  <span className="text-gray-700">Energy level increased</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
-};
 
-export default ChatHome;
+        <div className="p-6 space-y-2 border-t border-gray-200 flex-shrink-0">
+          <Button variant="outline" className="w-full justify-start bg-transparent" size="sm">
+            <User className="w-4 h-4 mr-2" />
+            Account Settings
+          </Button>
+          <Button className="w-full bg-gray-900 hover:bg-gray-800 text-white">
+            <Crown className="w-4 h-4 mr-2" />
+            Upgrade to Pro
+          </Button>
+          <Button variant="ghost" className="w-full justify-start text-gray-600 hover:text-gray-900" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ProPlanModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const handleContactUs = () => {
+    alert("Contact us at: enterprise@eternal-ai.com or call +1 (555) 123-4567")
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl bg-white max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-gray-900 text-center">
+            Choose Your Spiritual Journey Plan
+          </DialogTitle>
+          <p className="text-center text-gray-600 mt-2">
+            Purchase credits to unlock individual reports or bundles for better value
+          </p>
+        </DialogHeader>
+
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Credit Packages</h3>
+          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            {creditPackages.map((pkg) => (
+              <div
+                key={pkg.name}
+                className={`relative p-4 border-2 transition-all ${
+                  pkg.popular ? "border-gray-900 bg-gray-50" : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                {pkg.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Best Value
+                  </Badge>
+                )}
+
+                <div className="text-center mb-4">
+                  <h4 className="text-lg font-semibold text-gray-900 mb-1">{pkg.name}</h4>
+                  {pkg.savings && <div className="text-sm text-green-600 font-medium mb-2">{pkg.savings}</div>}
+                  <div className="flex items-baseline justify-center mb-2">
+                    <span className="text-2xl font-bold text-gray-900">{pkg.price}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {pkg.credits} credits ({pkg.pricePerCredit}/credit)
+                  </div>
+                </div>
+
+                <Button
+                  className={`w-full ${
+                    pkg.popular
+                      ? "bg-gray-900 hover:bg-gray-800 text-white"
+                      : "bg-white border border-gray-300 text-gray-900 hover:bg-gray-50"
+                  }`}
+                  variant={pkg.popular ? "default" : "outline"}
+                >
+                  Buy {pkg.credits} Credits
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Report Bundles</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            {reportBundles.map((bundle) => (
+              <div
+                key={bundle.name}
+                className={`relative p-4 border-2 transition-all ${
+                  bundle.popular ? "border-purple-500 bg-purple-50" : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                {bundle.popular && (
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white">
+                    <Star className="w-3 h-3 mr-1" />
+                    Popular
+                  </Badge>
+                )}
+
+                <div className="text-center mb-4">
+                  <h4 className="text-base font-semibold text-gray-900 mb-1">{bundle.name}</h4>
+                  {bundle.savings && <div className="text-xs text-green-600 font-medium mb-2">{bundle.savings}</div>}
+                  <div className="mb-2">
+                    <span className="text-xl font-bold text-gray-900">{bundle.credits}</span>
+                    <span className="text-sm text-gray-600 ml-1">credits</span>
+                  </div>
+                  <div className="text-xs text-gray-500 mb-2">
+                    {bundle.reports} report{bundle.reports > 1 ? "s" : ""}
+                  </div>
+                  <div className="text-xs text-gray-500">{bundle.priceEquivalent}</div>
+                </div>
+
+                <Button
+                  className={`w-full text-sm ${
+                    bundle.popular
+                      ? "bg-purple-600 hover:bg-purple-700 text-white"
+                      : "bg-white border border-gray-300 text-gray-900 hover:bg-gray-50"
+                  }`}
+                  variant={bundle.popular ? "default" : "outline"}
+                  size="sm"
+                >
+                  Use {bundle.credits} Credits
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-12 p-6 bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-lg">
+          <div className="text-center">
+            <Crown className="w-8 h-8 mx-auto mb-3 text-yellow-400" />
+            <h3 className="text-xl font-bold mb-2">Enterprise Plan</h3>
+            <p className="text-gray-300 mb-4 max-w-2xl mx-auto">
+              Custom solutions for organizations, spiritual centers, and wellness practitioners. Bulk credits,
+              white-label options, API access, and dedicated support.
+            </p>
+            <div className="flex items-center justify-center gap-6 text-sm text-gray-300 mb-6">
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                <span>Unlimited reports</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                <span>API integration</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                <span>White-label solution</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-4 h-4 text-green-400" />
+                <span>Priority support</span>
+              </div>
+            </div>
+            <Button
+              onClick={handleContactUs}
+              className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold px-8"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact Sales
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+          <div className="flex items-center justify-center gap-8 text-sm text-gray-600">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-amber-500" />
+              <span>Credits never expire</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-green-600" />
+              <span>Instant access</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Crown className="w-4 h-4 text-gray-900" />
+              <span>Premium insights</span>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+// Main Component
+export default function Dashboard() {
+  const [activeSection, setActiveSection] = useState("ask-about-today")
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [showProModal, setShowProModal] = useState(false)
+  const [unlockedFeatures, setUnlockedFeatures] = useState(["ask-about-today", "star-map"])
+  const { currentUser } = useAuth();
+  const [userProfile, setUserProfile] = useState({
+    profilePicUrl: defaultProfilePic,
+    name: 'Spiritual Seeker',
+    email: '',
+    dob: '',
+    birthPlace: '',
+  });
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+
+  const unlockAllFeatures = () => {
+    setUnlockedFeatures([
+      "ask-about-today",
+      "vibrational-frequency",
+      "aura-profile",
+      "flame-score",
+      "star-map",
+      "kosha-scan",
+      "longevity-index",
+      "numerology",
+    ])
+  }
+
+  if (typeof window !== "undefined") {
+    ;(window as any).unlockAll = unlockAllFeatures
+  }
+
+  const handleSectionClick = (sectionId: string) => {
+    if (unlockedFeatures.includes(sectionId)) {
+      setActiveSection(sectionId)
+    } else {
+      setShowProModal(true)
+    }
+  }
+
+  // Fetch user profile from Firebase on mount and when currentUser changes
+  useEffect(() => {
+    async function fetchUserProfile() {
+      if (!currentUser?.uid) return;
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+        setUserProfile({
+          profilePicUrl: data.profilePicUrl || defaultProfilePic,
+          name: data.firstName || data.displayName || data.email || 'Spiritual Seeker',
+          email: data.email || '',
+          dob: data.dateOfBirth || '',
+          birthPlace: data.birthPlace || '',
+        });
+      }
+    }
+    fetchUserProfile();
+  }, [currentUser]);
+
+  // Fetch profile image from Firestore
+  useEffect(() => {
+    async function fetchProfileImage() {
+      if (!currentUser?.uid) return;
+      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if (userDoc.exists() && userDoc.data().profilePicUrl) {
+        setProfileAvatar(userDoc.data().profilePicUrl);
+      } else {
+        setProfileAvatar(null);
+      }
+    }
+    fetchProfileImage();
+  }, [currentUser]);
+
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-purple-50 via-purple-100 to-purple-150 relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {Array.from({ length: 30 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-purple-300 text-lg font-light opacity-40"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              transform: "rotate(" + Math.random() * 360 + "deg)",
+            }}
+          >
+            +
+          </div>
+        ))}
+
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={`line-${i}`}
+            className="absolute w-8 h-0.5 bg-purple-200 opacity-30"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${3 + Math.random() * 2}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      <Sidebar
+        activeSection={activeSection}
+        onSectionClick={handleSectionClick}
+        unlockedFeatures={unlockedFeatures}
+        username={userProfile.name}
+        profileAvatar={profileAvatar || userProfile.profilePicUrl || defaultProfilePic}
+        fallbackPic={defaultProfilePic}
+      />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header activeSection={activeSection} onProfileClick={() => setIsProfileOpen(true)} profileAvatar={profileAvatar || userProfile.profilePicUrl || defaultProfilePic} fallbackPic={defaultProfilePic} />
+        <ChatArea activeSection={activeSection} />
+      </div>
+
+      <ProfilePanel isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} userName={userProfile.name} userProfilePic={profileAvatar || userProfile.profilePicUrl || defaultProfilePic} userEmail={userProfile.email} />
+      <ProPlanModal isOpen={showProModal} onClose={() => setShowProModal(false)} />
+
+      <style>
+        {`
+        @keyframes float-line {
+          0% {
+            transform: translateX(0) translateY(0);
+            opacity: 0;
+          }
+          50% {
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateX(20px) translateY(-10px);
+            opacity: 0;
+          }
+        }
+        
+        .animate-float-line {
+          animation: float-line linear infinite;
+        }
+
+        @keyframes slide-in-from-bottom-4 {
+          from {
+            transform: translateY(16px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slide-in-from-bottom-2 {
+          from {
+            transform: translateY(8px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        
+        .animate-in {
+          animation-fill-mode: both;
+        }
+        
+        .slide-in-from-bottom-4 {
+          animation: slide-in-from-bottom-4 0.5s ease-out;
+        }
+        
+        .slide-in-from-bottom-2 {
+          animation: slide-in-from-bottom-2 0.7s ease-out;
+        }
+      `}
+      </style>
+    </div>
+  )
+}

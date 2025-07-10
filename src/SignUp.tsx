@@ -9,22 +9,32 @@ import {
 } from 'firebase/auth';
 import { auth, db } from './firebase/config';
 import { useNavigate } from 'react-router-dom';
-import logo from './google-logo.png'
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import logo from './google-logo.png';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// Remove or comment out the following lines if the files do not exist:
+// import defaultProfilePic from './default-pfp.jpg';
+// import Cropper from 'react-easy-crop';
+import { useCallback } from 'react';
  
  
  
-const LandingPage: React.FC = () => {
+const SignUp: React.FC = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showRewritePassword, setShowRewritePassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rewritePassword: '',
-    confirmPassword: '',
-    fullName: '',
+    firstName: '',
+    lastName: '',
+    dateOfBirth: '',
+    timeOfBirth: '',
+    gender: '',
   });
+  const [profilePic, setProfilePic] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -33,18 +43,100 @@ const LandingPage: React.FC = () => {
     password: '',
     rewritePassword: ''
   });
+  const [isGoogleSignUp, setIsGoogleSignUp] = useState(false);
+  const [showCropper, setShowCropper] = useState(false);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [googleUser, setGoogleUser] = useState<any>(null);
  
  
-  const handleSubmit = async (e: React.FormEvent) => {
+  // Update handleInputChange to accept both input and select events
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+ 
+  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+ 
+  const getCroppedImg = async (imageSrc: string, crop: any) => {
+    const image = new window.Image();
+    image.src = imageSrc;
+    await new Promise((resolve) => { image.onload = resolve; });
+    const canvas = document.createElement('canvas');
+    const diameter = Math.min(crop.width, crop.height);
+    canvas.width = diameter;
+    canvas.height = diameter;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(diameter / 2, diameter / 2, diameter / 2, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(
+      image,
+      crop.x,
+      crop.y,
+      diameter,
+      diameter,
+      0,
+      0,
+      diameter,
+      diameter
+    );
+    ctx.restore();
+    return new Promise<string>((resolve) => {
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const url = URL.createObjectURL(blob);
+          resolve(url);
+        }
+      }, 'image/png');
+    });
+  };
+ 
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setProfilePic(e.target.files[0]);
+      setShowCropper(true);
+      setCroppedImage(null);
+    }
+  };
+ 
+  const handleCropDone = async () => {
+    if (profilePic && croppedAreaPixels) {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const cropped = await getCroppedImg(event.target?.result as string, croppedAreaPixels);
+        setCroppedImage(cropped);
+        setShowCropper(false);
+      };
+      reader.readAsDataURL(profilePic);
+    }
+  };
+ 
+  const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setSuccess('');
     setFieldErrors({ email: '', password: '', rewritePassword: '' });
-    setLoading(true);
  
     let hasError = false;
     const newErrors = { email: '', password: '', rewritePassword: '' };
  
+    if (!formData.firstName.trim()) {
+      setError('First name is required.');
+      return;
+    }
+    if (!formData.lastName.trim()) {
+      setError('Last name is required.');
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
@@ -60,29 +152,77 @@ const LandingPage: React.FC = () => {
     }
     if (hasError) {
       setFieldErrors(newErrors);
+      return;
+    }
+    setStep(2);
+  };
+ 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+ 
+    if (!formData.dateOfBirth) {
+      setError('Date of birth is required.');
+      setLoading(false);
+      return;
+    }
+    if (!formData.timeOfBirth) {
+      setError('Time of birth is required.');
+      setLoading(false);
+      return;
+    }
+    if (!formData.gender) {
+      setError('Gender is required.');
       setLoading(false);
       return;
     }
  
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-      const user = userCredential.user;
-      await updateProfile(user, { displayName: formData.fullName });
-      // Store user in Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        email: formData.email,
-        fullName: formData.fullName,
-        createdAt: serverTimestamp(),
-      });
-      setSuccess('Account created successfully!');
-      // Check if user already has a report
-      const reportDoc = await getDoc(doc(db, 'userResults', user.uid));
-      setTimeout(() => {
-        if (reportDoc.exists()) {
-          navigate('/report');
-        } else {
-          navigate('/profile-creation');
+      let user, uid;
+      if (isGoogleSignUp && googleUser) {
+        user = googleUser;
+        uid = user.uid;
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        user = userCredential.user;
+        uid = user.uid;
+      }
+      const fullName = [formData.firstName, formData.lastName].filter(Boolean).join(' ').trim();
+      let profilePicUrl = '';
+      if (isGoogleSignUp && user.photoURL) {
+        profilePicUrl = user.photoURL;
+      } else if (profilePic) {
+        let fileToUpload = profilePic;
+        if (croppedImage) {
+          const response = await fetch(croppedImage);
+          const blob = await response.blob();
+          fileToUpload = new File([blob], profilePic.name, { type: 'image/png' });
         }
+        const storage = getStorage();
+        const storageRef = ref(storage, `profile_pics/${uid}`);
+        await uploadBytes(storageRef, fileToUpload);
+        profilePicUrl = await getDownloadURL(storageRef);
+      } else {
+        // TODO: Add default profile picture and cropper functionality later if needed.
+        profilePicUrl = ''; // No default profile pic if not using one
+      }
+      await setDoc(doc(db, 'users', uid), {
+        email: formData.email,
+        fullName: fullName,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
+        timeOfBirth: formData.timeOfBirth,
+        gender: formData.gender,
+        profilePicUrl,
+        createdAt: serverTimestamp(),
+        isGoogleSignUp: !!isGoogleSignUp,
+      }, { merge: true });
+      setSuccess('Account created successfully!');
+      setTimeout(() => {
+        navigate('/onboarding-splash');
       }, 1800);
     } catch (err: any) {
       setError(err.message || 'Signup failed. Please try again.');
@@ -96,18 +236,16 @@ const LandingPage: React.FC = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      setSuccess('Account created successfully!');
-      // Check if user already has a report
-      const reportDoc = await getDoc(doc(db, 'userResults', user.uid));
-      setTimeout(() => {
-        if (reportDoc.exists()) {
-          navigate('/report');
-        } else {
-          navigate('/SignUp');
-        }
-      }, 1800);
+      setIsGoogleSignUp(true);
+      setGoogleUser(user);
+      setFormData((prev) => ({
+        ...prev,
+        firstName: user.displayName ? user.displayName.split(' ')[0] : '',
+        lastName: user.displayName ? user.displayName.split(' ').slice(1).join(' ') : '',
+        email: user.email || '',
+      }));
+      setStep(2);
     } catch (err: any) {
-      console.error('Google login error:', err.message);
       setError('Google login error: ' + err.message);
     }
   };
@@ -122,20 +260,12 @@ const LandingPage: React.FC = () => {
     { top: '35%', right: '15%', size: '10px', delay: '0.8s' }
   ];
  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
- 
   return (
     <div className="eternal-ai-fullscreen">
       <style>{`
         .eternal-ai-fullscreen {
           min-height: 100vh;
-          background: #ffffff;
-          background: #ffffff;
+          background: linear-gradient(to bottom right, #f3e8ff, #fdf2f8, #fef2f2);
           position: relative;
           overflow: hidden;
           display: flex;
@@ -214,6 +344,7 @@ const LandingPage: React.FC = () => {
           min-height: 100vh;
           display: flex;
           align-items: center;
+          justify-content: center;
         }
  
         .left-section {
@@ -222,32 +353,38 @@ const LandingPage: React.FC = () => {
           flex-direction: column;
           justify-content: center;
           min-height: 100vh;
-          background: #ffffff;
-          //  background: linear-gradient(135deg, #e8d5ff 0%, #f0e6ff 25%, #fff0f8 50%, #ffe6f0 75%, #ffd9e6 100%);
+          background: transparent;
+          position: relative;
+          overflow: hidden;
         }
  
         .right-section {
-          background: #ffffff;
-          backdrop-filter: blur(10px);
-          padding: 60px 120px;
+          background: transparent;
+          backdrop-filter: none;
+          padding: 0;
           display: flex;
           flex-direction: column;
           justify-content: center;
           min-height: 100vh;
-          border-left: 1px solid rgba(255, 255, 255, 0.2);
-          max-width: 900px;
+          border-left: none;
+          max-width: 850px;
           width: 100%;
           margin: 0 auto;
         }
  
         .signup-section {
-          padding: 40px 56px;
-          border-radius: 16px;
-          background: rgba(255,255,255,0.98);
-          box-shadow: 0 2px 16px rgba(0,0,0,0.04);
-          max-width: 800px;
+          padding: 40px 32px;
+          border-radius: 20px;
+          background: #fff;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+          backdrop-filter: none;
+          border: none;
+          max-width: 480px;
           width: 100%;
           margin: 0 auto;
+          position: relative;
+          top: var(--signup-card-top, 0);
+          left: var(--signup-card-left, -130px);
         }
  
         .brand-text {
@@ -455,7 +592,7 @@ const LandingPage: React.FC = () => {
          
           .left-section,
           .right-section {
-            padding: 40px 30px;
+            padding: 24px 0;
             min-height: auto;
           }
          
@@ -483,7 +620,7 @@ const LandingPage: React.FC = () => {
             border-top: 1px solid rgba(255, 255, 255, 0.2);
           }
           .signup-section {
-            padding: 32px 10px;
+            padding: 24px 8px;
             max-width: 100vw;
           }
         }
@@ -497,7 +634,7 @@ const LandingPage: React.FC = () => {
          
           .left-section,
           .right-section {
-            padding: 24px 2vw;
+            padding: 12px 0;
           }
          
           .hero-title {
@@ -522,7 +659,7 @@ const LandingPage: React.FC = () => {
             padding: 30px 20px;
           }
           .signup-section {
-            padding: 20px 2vw;
+            padding: 10px 0;
             max-width: 100vw;
           }
         }
@@ -572,9 +709,10 @@ const LandingPage: React.FC = () => {
         }
  
         .rotate-image-bg {
-          width: 500px;
-          height: 500px;
-          animation: rotateAnimation 5s linear infinite;
+          width: 600px;
+          height: 600px;
+          animation: rotateAnimation 20s linear infinite;
+          opacity: 0.12;
         }
  
         @keyframes rotateAnimation {
@@ -641,7 +779,7 @@ const LandingPage: React.FC = () => {
                   src={background}
                   alt="Rotating Background"
                   className="rotate-image-bg"
-                  style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, opacity: 0.15, pointerEvents: 'none', width: '800px', height: '800px',color:'linear-gradient(135deg, #e8d5ff 0%, #f0e6ff 25%, #fff0f8 50%, #ffe6f0 75%, #ffd9e6 100%)'}}
+                  style={{position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none'}}
                 />
                 <div style={{position: 'relative', zIndex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh'}}>
                   <div className="brand-text">
@@ -652,12 +790,7 @@ const LandingPage: React.FC = () => {
                   </h1>
                   <p className="hero-description">
                   Connect with Eternal AI and explore your spiritual journey
- 
- 
                   </p>
-                  {/* <button className="btn-demo">
-                    Start Demo
-                  </button> */}
                 </div>
               </div>
             </div>
@@ -666,93 +799,117 @@ const LandingPage: React.FC = () => {
             <div className="col-lg-5 col-12">
               <div className="right-section">
                 <div className="signup-section">
-                  <h2>
-                    Hey There! 👋
-                  </h2>
-                  <h3>Sign Up Now</h3>
-                 
-                  <form onSubmit={handleSubmit} autoComplete="off">
-                    <div className="form-group">
-                      <label className="form-label">Email address / Phone Number*</label>
-                      <input
-                        type="email"
-                        className="form-control"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        placeholder=""
-                      />
-                      {fieldErrors.email && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.email}</div>}
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Password*</label>
-                      <div className="password-input-wrapper">
-                        <input
-                          type={showPassword ? "text" : "password"}
-                          className="form-control"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
-                          placeholder="Enter password"
-                        />
-                        <button
-                          type="button"
-                          className="password-toggle"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? '👁️' : '🙈'}
-                        </button>
+                  {step === 1 && (
+                    <form onSubmit={handleNext} autoComplete="off">
+                      <h2>👋 Sign Up</h2>
+                      <div className="form-group">
+                        <label className="form-label">First Name*</label>
+                        <input type="text" className="form-control" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
                       </div>
-                      {fieldErrors.password && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.password}</div>}
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Rewrite Password*</label>
-                      <div className="password-input-wrapper">
-                        <input
-                          type={showRewritePassword ? "text" : "password"}
-                          className="form-control"
-                          name="rewritePassword"
-                          value={formData.rewritePassword}
-                          onChange={handleInputChange}
-                          placeholder="Enter password"
-                        />
-                        <button
-                          type="button"
-                          className="password-toggle"
-                          onClick={() => setShowRewritePassword(!showRewritePassword)}
-                        >
-                          {showRewritePassword ? '👁️' : '🙈'}
-                        </button>
+                      <div className="form-group">
+                        <label className="form-label">Last Name*</label>
+                        <input type="text" className="form-control" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
                       </div>
-                      {fieldErrors.rewritePassword && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.rewritePassword}</div>}
-                    </div>
-                    <button
-                      className="btn-signup"
-                      type="submit"
-                      disabled={loading}
-                    >
-                      {loading ? 'Creating Account...' : 'Sign Up'}
-                    </button>
-                  </form>
-                 
+                      <div className="form-group">
+                        <label className="form-label">Email*</label>
+                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} required />
+                        {fieldErrors.email && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.email}</div>}
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Password*</label>
+                        <div className="password-input-wrapper">
+                          <input type={showPassword ? "text" : "password"} className="form-control" name="password" value={formData.password} onChange={handleInputChange} required />
+                          <button type="button" className="password-toggle" onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? '👁️' : '🙈'}
+                          </button>
+                        </div>
+                        {fieldErrors.password && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.password}</div>}
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Confirm Password*</label>
+                        <div className="password-input-wrapper">
+                          <input type={showRewritePassword ? "text" : "password"} className="form-control" name="rewritePassword" value={formData.rewritePassword} onChange={handleInputChange} required />
+                          <button type="button" className="password-toggle" onClick={() => setShowRewritePassword(!showRewritePassword)}>
+                            {showRewritePassword ? '👁️' : '🙈'}
+                          </button>
+                        </div>
+                        {fieldErrors.rewritePassword && <div style={{ color: 'red', fontSize: '0.95rem', marginTop: 4 }}>{fieldErrors.rewritePassword}</div>}
+                      </div>
+                      {error && <div className="alert alert-danger mt-3">{error}</div>}
+                      <button className="btn-signup" type="submit">Next</button>
+                      <div style={{ textAlign: 'center', margin: '16px 0' }}>
+                        <span style={{ color: '#888', fontSize: '0.95rem' }}>or</span>
+                      </div>
+                      <button type="button" className="btn-google" style={{ width: '100%', marginBottom: 8 }} onClick={handleGoogleSignIn}>
+                        <img src={logo} alt="Google Logo" style={{ width: 20, height: 20, marginRight: 8, verticalAlign: 'middle' }} />
+                        Sign up with Google
+                      </button>
+                      <div style={{ textAlign: 'center', marginTop: 12 }}>
+                        <a href="/login" style={{ fontSize: '0.95rem', color: '#6a1b9a', textDecoration: 'underline', cursor: 'pointer' }}>Go back to login</a>
+                      </div>
+                    </form>
+                  )}
+                  {step === 2 && (
+                    <form onSubmit={handleSubmit} autoComplete="off">
+                      <h2>👋 Sign Up</h2>
+                      {/* Profile Picture Upload (optional, circular preview) */}
+                      {!isGoogleSignUp && (
+                        <div className="form-group" style={{ textAlign: 'center' }}>
+                          <label className="form-label">Profile Picture (optional)</label>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 12 }}>
+                            <div style={{ width: 96, height: 96, borderRadius: '50%', overflow: 'hidden', background: '#eee', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <img
+                                src={croppedImage || (profilePic ? URL.createObjectURL(profilePic) : '')}
+                                alt="Profile Preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                              />
+                            </div>
+                            <input type="file" accept="image/*" className="form-control" onChange={handleProfilePicChange} style={{ maxWidth: 200 }} />
+                          </div>
+                          {showCropper && profilePic && (
+                            <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ background: '#fff', padding: 24, borderRadius: 12, position: 'relative', width: 350, height: 350 }}>
+                                {/* TODO: Add Cropper component here */}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 16 }}>
+                                  <button type="button" className="btn btn-secondary" onClick={() => setShowCropper(false)}>Cancel</button>
+                                  <button type="button" className="btn-signup" onClick={handleCropDone}>Crop</button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="form-group">
+                        <label className="form-label">Gender*</label>
+                        <select className="form-control" name="gender" value={formData.gender} onChange={handleInputChange} required>
+                          <option value="" disabled>Select your gender</option>
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                          <option value="Other">Other</option>
+                          <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Date of Birth*</label>
+                        <input type="date" className="form-control" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} required />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Time of Birth*</label>
+                        <input type="time" className="form-control" name="timeOfBirth" value={formData.timeOfBirth} onChange={handleInputChange} required />
+                      </div>
+                      {error && <div className="alert alert-danger mt-3">{error}</div>}
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <button type="button" className="btn-signup" style={{ flex: 1, background: '#e0e0e0', color: '#333', border: 'none' }} onClick={() => setStep(1)}>
+                          Back
+                        </button>
+                        <button className="btn-signup" type="submit" style={{ flex: 1 }} disabled={loading}>{loading ? 'Creating Account...' : 'Sign Up'}</button>
+                      </div>
+                      <div style={{ textAlign: 'center', marginTop: 12 }}>
+                        <a href="/login" style={{ fontSize: '0.95rem', color: '#6a1b9a', textDecoration: 'underline', cursor: 'pointer' }}>Go back to login</a>
+                      </div>
+                    </form>
+                  )}
                   {success && <div className="alert alert-success mt-3">{success}</div>}
-                  {error && <div className="alert alert-danger mt-3">{error}</div>}
- 
-                  <div className="divider">
-                    <span>Or</span>
-                  </div>
-                 
-                  <div className="social-buttons">
-                    <a href="#" className="btn-google"   onClick={handleGoogleSignIn}>
-                      <img src={logo} alt="Google Logo" style={{width: '20px', height: '20px', marginRight: '8px'}} />
-                      Sign up with Google
-                    </a>
-                 
-                  </div>
-                 
-                  <div className="login-link">
-                    Already have an account, <a href="/login">Log-in</a>
-                  </div>
                 </div>
               </div>
             </div>
@@ -763,5 +920,5 @@ const LandingPage: React.FC = () => {
   );
 };
  
-export default LandingPage;
+export default SignUp;
  

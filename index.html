@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat UI</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .dashboard {
+            display: flex;
+            height: 100vh;
+            background: #f8f9fa;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0 20px 15px;
+            font-weight: 500;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #6b7280;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .nav-item:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .nav-item.active {
+            background: #ede9fe;
+            color: #7c3aed;
+            border-right: 3px solid #7c3aed;
+        }
+
+        .nav-icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .nav-label {
+            flex: 1;
+        }
+
+        .pro-badge {
+            background: #7c3aed;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .pro-upgrade {
+            margin: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .pro-circle {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 18px;
+        }
+
+        .pro-upgrade h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .pro-upgrade p {
+            font-size: 12px;
+            opacity: 0.9;
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .pro-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .api-key-button {
+            margin: 0 20px 20px;
+            padding: 12px;
+            background: #1f2937;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .user-name {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .user-action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .top-bar-center {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .model-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .model-btn.active {
+            background: #7c3aed;
+            border-color: #7c3aed;
+            color: white;
+        }
+
+        .plugins-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .plugins-dropdown {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-btn,
+        .notifications-btn,
+        .help-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .user-menu {
+            width: 36px;
+            height: 36px;
+            background: #7c3aed;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            color: #6b7280;
+        }
+
+        .messages-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Messages */
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            max-width: 80%;
+        }
+
+        .message-container.user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .ai-avatar,
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .ai-avatar {
+            background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+            color: white;
+        }
+
+        .user-avatar {
+            background: #6b7280;
+            color: white;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 100%;
+        }
+
+        .ai-bubble {
+            background: white;
+            border: 1px solid #e5e7eb;
+            color: #1f2937;
+        }
+
+        .user-bubble {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .message-bubble p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-reply-btn {
+            background: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            background: #ede9fe;
+            border-color: #7c3aed;
+            color: #7c3aed;
+        }
+
+        /* Typing */
+        .typing-indicator {
+            padding: 16px 20px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7c3aed;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        .typing-dots span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Input */
+        .chat-input-container {
+            padding: 24px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 16px;
+            color: #1f2937;
+            resize: none;
+            min-height: 24px;
+            font-family: inherit;
+        }
+
+        .chat-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .submit-btn {
+            background: #7c3aed;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .version-link {
+            color: #7c3aed;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                left: -100%;
+                z-index: 1000;
+            }
+
+            .top-bar-center {
+                display: none;
+            }
+
+            .message-container {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Data
+        const aiQuestions = [
+            {
+                question: "Hi there! I'm your AI companion. What would you like to explore today?",
+                quickReplies: [
+                    { id: "1", text: "Health & Wellness", value: "I want to focus on my health and wellness journey" },
+                    { id: "2", text: "Relationships", value: "I need guidance with my relationships" },
+                    { id: "3", text: "Personal Growth", value: "I want to work on personal development" },
+                    { id: "4", text: "Career Guidance", value: "I need help with my career path" },
+                ],
+            },
+            {
+                question: "That's wonderful! How are you feeling about this area of your life right now?",
+                quickReplies: [
+                    { id: "5", text: "Excited & Motivated", value: "I feel excited and motivated to make changes" },
+                    { id: "6", text: "Confused & Uncertain", value: "I feel confused and uncertain about what to do" },
+                    { id: "7", text: "Overwhelmed", value: "I feel overwhelmed by all the possibilities" },
+                    { id: "8", text: "Ready for Change", value: "I feel ready to take action and make changes" },
+                ],
+            },
+            {
+                question: "I understand. What's your biggest challenge or obstacle right now?",
+                quickReplies: [
+                    { id: "9", text: "Lack of Time", value: "I struggle with finding enough time" },
+                    { id: "10", text: "Self-Doubt", value: "I deal with self-doubt and confidence issues" },
+                    { id: "11", text: "No Clear Direction", value: "I lack a clear direction or plan" },
+                    { id: "12", text: "Fear of Failure", value: "I have fear of failure holding me back" },
+                ],
+            },
+            {
+                question: "Thank you for sharing. What kind of support would be most helpful for you?",
+                quickReplies: [
+                    { id: "13", text: "Practical Steps", value: "I need practical, actionable steps to follow" },
+                    { id: "14", text: "Emotional Support", value: "I need emotional support and encouragement" },
+                    { id: "15", text: "Accountability", value: "I need someone to keep me accountable" },
+                    { id: "16", text: "New Perspectives", value: "I need fresh perspectives and insights" },
+                ],
+            },
+        ];
+
+        const getRandomFollowUpQuestion = () => {
+            const followUps = [
+                {
+                    question: "What's one small step you could take today toward your goal?",
+                    quickReplies: [
+                        { id: "17", text: "Research & Learn", value: "I could spend time researching and learning more" },
+                        { id: "18", text: "Make a Plan", value: "I could create a detailed action plan" },
+                        { id: "19", text: "Take Action", value: "I could take one concrete action step" },
+                        { id: "20", text: "Seek Support", value: "I could reach out for help or guidance" },
+                    ],
+                },
+                {
+                    question: "How do you usually handle challenges when they come up?",
+                    quickReplies: [
+                        { id: "21", text: "Face Them Head-On", value: "I tackle challenges directly and immediately" },
+                        { id: "22", text: "Think It Through", value: "I take time to analyze and plan my approach" },
+                        { id: "23", text: "Seek Advice", value: "I ask others for their input and guidance" },
+                        { id: "24", text: "Take Breaks", value: "I step back and give myself time to process" },
+                    ],
+                },
+            ];
+            return followUps[Math.floor(Math.random() * followUps.length)];
+        };
+
+        const App = () => {
+            const [currentPage, setCurrentPage] = useState("chat");
+            const [selectedModel, setSelectedModel] = useState("gpt-3.5");
+            const [inputValue, setInputValue] = useState("");
+            const [messages, setMessages] = useState([]);
+            const [isTyping, setIsTyping] = useState(false);
+            const [currentStep, setCurrentStep] = useState(0);
+            const messagesEndRef = useRef(null);
+
+            // Initialize chat
+            useEffect(() => {
+                const initialMessage = {
+                    id: "1",
+                    role: "assistant",
+                    content: aiQuestions[0].question,
+                    timestamp: new Date(),
+                    quickReplies: aiQuestions[0].quickReplies,
+                };
+                setMessages([initialMessage]);
+            }, []);
+
+            // Auto-scroll
+            useEffect(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+            }, [messages, isTyping]);
+
+            const addMessage = (content, role, quickReplies) => {
+                const newMessage = {
+                    id: Date.now().toString(),
+                    role,
+                    content,
+                    timestamp: new Date(),
+                    quickReplies,
+                };
+                setMessages((prev) => [...prev, newMessage]);
+            };
+
+            const simulateAIResponse = () => {
+                setIsTyping(true);
+                setTimeout(() => {
+                    setIsTyping(false);
+                    let nextQuestion;
+                    const nextStep = currentStep + 1;
+
+                    if (nextStep < aiQuestions.length) {
+                        nextQuestion = aiQuestions[nextStep];
+                    } else {
+                        nextQuestion = getRandomFollowUpQuestion();
+                    }
+
+                    const acknowledgments = [
+                        "I appreciate you sharing that with me.",
+                        "Thank you for being so open about your feelings.",
+                        "That's really insightful, thank you for sharing.",
+                        "I can understand how you're feeling about this.",
+                        "Your perspective is really valuable.",
+                    ];
+
+                    const randomAck = acknowledgments[Math.floor(Math.random() * acknowledgments.length)];
+
+                    setTimeout(() => {
+                        addMessage(randomAck, "assistant");
+                        setTimeout(() => {
+                            addMessage(nextQuestion.question, "assistant", nextQuestion.quickReplies);
+                            setCurrentStep(nextStep);
+                        }, 1000);
+                    }, 500);
+                }, 1500 + Math.random() * 1000);
+            };
+
+            const handleSendMessage = (message) => {
+                addMessage(message, "user");
+                setInputValue("");
+                simulateAIResponse();
+            };
+
+            const handleQuickReplySelect = (reply) => {
+                setInputValue(reply.value);
+                setTimeout(() => {
+                    handleSendMessage(reply.value);
+                    setInputValue("");
+                }, 300);
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    if (inputValue.trim()) {
+                        handleSendMessage(inputValue.trim());
+                    }
+                }
+            };
+
+            const menuItems = [
+                { id: "chat", icon: "💬", label: "Chat UI", isPro: false },
+                { id: "templates", icon: "📄", label: "AI Templates", isPro: true },
+                { id: "projects", icon: "📁", label: "My Projects", isPro: true },
+                { id: "pages", icon: "📋", label: "Other Pages", isPro: true },
+                { id: "admin", icon: "⚙️", label: "Admin Pages", isPro: true },
+            ];
+
+            return (
+                <div className="dashboard">
+                    {/* Sidebar */}
+                    <div className="sidebar">
+                        <div className="sidebar-header">
+                            <div className="logo">
+                                <span className="logo-text">ETERNAL AI</span>
+                            </div>
+                        </div>
+
+                        <nav className="sidebar-nav">
+                            <div className="nav-section">
+                                <span className="nav-section-title">Pages / Chat UI</span>
+                            </div>
+
+                            {menuItems.map((item) => (
+                                <button
+                                    key={item.id}
+                                    className={`nav-item ${currentPage === item.id ? "active" : ""}`}
+                                    onClick={() => setCurrentPage(item.id)}
+                                >
+                                    <span className="nav-icon">{item.icon}</span>
+                                    <span className="nav-label">{item.label}</span>
+                                    {item.isPro && <span className="pro-badge">PRO</span>}
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="pro-upgrade">
+                            <div className="pro-icon">
+                                <div className="pro-circle">
+                                    <span>🚀</span>
+                                </div>
+                            </div>
+                            <h3>Go unlimited with PRO</h3>
+                            <p>Get your AI project to another level and start doing more with Eternal AI Template PRO!</p>
+                            <button className="pro-button">Get started with PRO</button>
+                        </div>
+
+                        <button className="api-key-button">Set API Key</button>
+
+                        <div className="user-profile">
+                            <div className="user-avatar">👤</div>
+                            <span className="user-name">Adela Parkson</span>
+                            <div className="user-actions">
+                                <button className="user-action-btn">⚙️</button>
+                                <button className="user-action-btn">🔔</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div className="main-content">
+                        {/* Top Bar */}
+                        <div className="top-bar">
+                            <div className="page-title">
+                                <h1>Chat UI</h1>
+                            </div>
+
+                            <div className="top-bar-center">
+                                <div className="model-selector">
+                                    <button
+                                        className={`model-btn ${selectedModel === "gpt-3.5" ? "active" : ""}`}
+                                        onClick={() => setSelectedModel("gpt-3.5")}
+                                    >
+                                        <span className="model-icon">✨</span>
+                                        GPT-3.5
+                                    </button>
+                                    <button
+                                        className={`model-btn ${selectedModel === "gpt-4" ? "active" : ""}`}
+                                        onClick={() => setSelectedModel("gpt-4")}
+                                    >
+                                        <span className="model-icon">🎯</span>
+                                        GPT-4
+                                    </button>
+                                </div>
+
+                                <div className="plugins-info">
+                                    <span>No plugins added</span>
+                                    <button className="plugins-dropdown">▼</button>
+                                </div>
+                            </div>
+
+                            <div className="top-bar-right">
+                                <button className="search-btn">🔍</button>
+                                <button className="notifications-btn">🔔</button>
+                                <button className="help-btn">❓</button>
+                                <div className="user-menu">
+                                    <span className="user-initial">AI</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="content-area">
+                            {/* Chat Area */}
+                            <div className="chat-area">
+                                {messages.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-icon">💬</div>
+                                        <h2>Start a conversation</h2>
+                                        <p>Ask me anything about personal growth, wellness, or life guidance.</p>
+                                    </div>
+                                ) : (
+                                    <div className="messages-list">
+                                        {messages.map((message, index) => (
+                                            <div
+                                                key={message.id}
+                                                className={`message-container ${message.role === "user" ? "user-message" : "ai-message"}`}
+                                            >
+                                                {message.role === "assistant" && (
+                                                    <div className="ai-avatar">
+                                                        <span>✨</span>
+                                                    </div>
+                                                )}
+
+                                                <div className={`message-bubble ${message.role === "user" ? "user-bubble" : "ai-bubble"}`}>
+                                                    <p>{message.content}</p>
+
+                                                    {message.role === "assistant" && message.quickReplies && index === messages.length - 1 && (
+                                                        <div className="quick-replies">
+                                                            {message.quickReplies.map((reply) => (
+                                                                <button
+                                                                    key={reply.id}
+                                                                    className="quick-reply-btn"
+                                                                    onClick={() => handleQuickReplySelect(reply)}
+                                                                    disabled={isTyping}
+                                                                >
+                                                                    {reply.text}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {message.role === "user" && (
+                                                    <div className="user-avatar">
+                                                        <span>👤</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+
+                                        {isTyping && (
+                                            <div className="message-container ai-message">
+                                                <div className="ai-avatar">
+                                                    <span>✨</span>
+                                                </div>
+                                                <div className="message-bubble ai-bubble typing-indicator">
+                                                    <div className="typing-dots">
+                                                        <span></span>
+                                                        <span></span>
+                                                        <span></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Chat Input */}
+                            <div className="chat-input-container">
+                                <div className="input-wrapper">
+                                    <textarea
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        onKeyPress={handleKeyPress}
+                                        placeholder="Type your message here..."
+                                        disabled={isTyping}
+                                        className="chat-input"
+                                        rows={1}
+                                    />
+                                    <button
+                                        className="submit-btn"
+                                        onClick={() => inputValue.trim() && handleSendMessage(inputValue.trim())}
+                                        disabled={isTyping || !inputValue.trim()}
+                                    >
+                                        Submit
+                                    </button>
+                                </div>
+                                <div className="input-footer">
+                                    <span>
+                                        Free Research Preview. ChatGPT may produce inaccurate information about people, places, or facts.
+                                    </span>
+                                    <a href="#" className="version-link">
+                                        ChatGPT May 12 Version
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

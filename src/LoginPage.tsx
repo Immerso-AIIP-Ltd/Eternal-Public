@@ -53,21 +53,30 @@ const LoginPage: React.FC = () => {
     setError('');
     setSuccess('');
     setIsLoading(true);
-   
+
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       if (!user) throw new Error('No user info received from Google');
-     
+
+      // Check if user exists in Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (!userDocSnap.exists()) {
+        setError('Account does not exist. Please sign up using Google on the Sign Up page.');
+        setIsLoading(false);
+        return;
+      }
+
       setSuccess('You have logged in successfully!');
-      const reportDocRef = doc(db, 'userResults', user.uid);
+      const reportDocRef = doc(db, 'karmicReports', user.uid);
       const reportDocSnap = await getDoc(reportDocRef);
-     
+
       setTimeout(() => {
         if (reportDocSnap.exists()) {
-          navigate('/report');
+          navigate('/home');
         } else {
-          navigate('/onboarding-one');
+          navigate('/profile-creation');
         }
       }, 1500);
     } catch (err: any) {
@@ -76,7 +85,7 @@ const LoginPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,13 +117,13 @@ const LoginPage: React.FC = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       setSuccess('You have logged in successfully!');
-      const reportDoc = await getDoc(doc(db, 'userResults', user.uid));
+      const reportDoc = await getDoc(doc(db, 'karmicReports', user.uid));
      
       setTimeout(() => {
         if (reportDoc.exists()) {
-          navigate('/report');
+          navigate('/home');
         } else {
-          navigate('/onboarding-one');
+          navigate('/profile-creation');
         }
       }, 1500);
     } catch (err: any) {
@@ -130,7 +139,7 @@ const LoginPage: React.FC = () => {
       <style>{`
         .eternal-ai-fullscreen {
           min-height: 100vh;
-          background: #ffffff;
+          background: linear-gradient(to bottom right, #f3e8ff, #fdf2f8, #fef2f2);
           position: relative;
           overflow: hidden;
           display: flex;
@@ -201,14 +210,14 @@ const LoginPage: React.FC = () => {
         }
  
         .right-section {
-          background: #ffffff;
-          backdrop-filter: blur(10px);
-          padding: 40px 60px;
+          background: transparent;
+          backdrop-filter: none;
+          padding: 0;
           display: flex;
           flex-direction: column;
           justify-content: center;
           min-height: 100vh;
-          border-left: 1px solid rgba(255, 255, 255, 0.2);
+          border-left: none;
           max-width: 600px;
           width: 100%;
         }
@@ -216,10 +225,10 @@ const LoginPage: React.FC = () => {
         .login-section {
           padding: 40px 32px;
           border-radius: 20px;
-          background: rgba(255,255,255,0.98);
+          background: #fff;
           box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255,255,255,0.2);
+          backdrop-filter: none;
+          border: none;
           max-width: 480px;
           width: 100%;
           margin: 0 auto;
@@ -373,17 +382,6 @@ const LoginPage: React.FC = () => {
           margin: 2rem 0;
           color: #6b6b6b;
           position: relative;
-        }
- 
-        .divider::before {
-          content: '';
-          position: absolute;
-          top: 50%;
-          left: 0;
-          right: 0;
-          height: 1px;
-          background: #e1e8ed;
-          z-index: 1;
         }
  
         .divider span {
@@ -651,6 +649,12 @@ const LoginPage: React.FC = () => {
                   {error && (
                     <div className="alert alert-error">
                       {error}
+                      {error.includes('Account does not exist') && (
+                        <>
+                          <br />
+                          <a href="/signup" style={{ color: '#6a1b9a', textDecoration: 'underline' }}>Sign up with Google</a>
+                        </>
+                      )}
                     </div>
                   )}
  

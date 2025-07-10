@@ -1,105 +1,110 @@
+// Enhanced KarmicReport with AI-generated content
 import React, { useState, useEffect } from 'react';
-import { useAuth } from './context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import KarmicReportChat from './KarmicReportChat';
+// If you see a linter error for this, run: npm install react-markdown
+import ReactMarkdown from 'react-markdown';
 
 interface KarmicReportData {
-  birthPlace: string;
-  lifeArea: string;
-  challenge: string;
-  jyotishReading: string;
-  chartImages: {
-    rasiChart: string;
-    navamshaChart: string;
+  birthPlace?: string;
+  lifeArea?: string;
+  challenge?: string;
+  jyotishReading?: string;
+  chartImages?: {
+    rasiChart?: string;
+    navamshaChart?: string;
+    [key: string]: any;
   };
-  birthData: {
-    location: string;
-    dob: string;
-    tob: string;
-    timezone: string;
+  birthData?: {
+    location?: string;
+    dob?: string;
+    tob?: string;
+    timezone?: string;
+  };
+  lat?: number;
+  lng?: number;
+  vedicApi?: any;
+  rapidApi?: any;
+  aiGeneratedkarmicreport?: string;
+  aiReportMetadata?: {
+    generatedAt?: string;
+    model?: string;
+    tokensUsed?: number;
+    [key: string]: any;
   };
 }
 
 const KarmicReport = () => {
-  const { currentUser } = useAuth();
-  const navigate = useNavigate();
   const [reportData, setReportData] = useState<KarmicReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'report' | 'charts' | 'chat'>('report');
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchReport = async () => {
-      if (currentUser) {
-        try {
-          const reportRef = doc(db, 'karmicReports', currentUser.uid);
-          const reportSnap = await getDoc(reportRef);
-          
-          if (reportSnap.exists()) {
-            setReportData(reportSnap.data() as KarmicReportData);
-          }
-        } catch (error) {
-          console.error('Error fetching karmic report:', error);
-        } finally {
-          setLoading(false);
-        }
+    if (!currentUser) {
+      navigate('/login');
+      return;
+    }
+    loadKarmicReport();
+    // eslint-disable-next-line
+  }, [currentUser, navigate]);
+
+  const loadKarmicReport = async () => {
+    try {
+      setLoading(true);
+      
+      const reportDoc = await getDoc(doc(db, 'karmicReports', currentUser.uid));
+      
+      if (!reportDoc.exists()) {
+        setError('No karmic report found. Please complete the onboarding process first.');
+        navigate('/onboarding-life-predictor');
+        return;
       }
-    };
 
-    fetchReport();
-  }, [currentUser]);
+      const data = reportDoc.data();
+      setReportData(data as KarmicReportData);
+      
+      // Check if AI report exists
+      if (!data.aiGeneratedkarmicreport) {
+        console.warn('AI-generated report not found, showing fallback content');
+      }
 
-  const navigateToPath = (path: string) => {
-    navigate(`/chat?path=${path}`);
-  };
-
-  const formatDate = (dateStr: string) => {
-    const [day, month, year] = dateStr.split('/');
-    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
-  const formatTime = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    } catch (err) {
+      console.error('Error loading karmic report:', err);
+      setError('Failed to load your karmic report. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
-      }}>
-        <div className="text-center">
-          <div className="spinner-border text-primary mb-3" style={{ width: '3rem', height: '3rem' }}>
-            <span className="visually-hidden">Loading...</span>
-          </div>
-          <h4 className="text-dark">Consulting the cosmic energies...</h4>
-          <p className="text-muted">Your Jyotish reading is being prepared</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="animate-spin w-16 h-16 border-4 border-purple-300 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-xl">Loading your cosmic insights...</p>
         </div>
       </div>
     );
   }
 
-  if (!reportData) {
+  if (error || !reportData) {
     return (
-      <div className="min-vh-100 d-flex align-items-center justify-content-center" style={{
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
-      }}>
-        <div className="text-center">
-          <h4 className="text-dark">No Karmic Report Found</h4>
-          <p className="text-muted">Please complete the Karmic Awareness assessment first.</p>
-          <button 
-            className="btn btn-primary btn-lg rounded-pill px-4"
-            onClick={() => navigateToPath('karmic')}
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center text-white max-w-md">
+          <div className="text-6xl mb-4">🌌</div>
+          <h2 className="text-2xl font-bold mb-4">Cosmic Alignment Issue</h2>
+          <p className="mb-6">{error}</p>
+          <button
+            onClick={() => navigate('/onboarding-life-predictor')}
+            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
           >
-            Take Assessment
+            Start New Reading
           </button>
         </div>
       </div>
@@ -107,505 +112,275 @@ const KarmicReport = () => {
   }
 
   return (
-    <div style={{ background: '#fff', minHeight: '100vh', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}>
-      <style>{`
-  .interactive-card {
-    transition: transform 0.18s cubic-bezier(.4,2,.6,1), box-shadow 0.18s, border-color 0.18s;
-    will-change: transform, box-shadow, border-color;
-    cursor: pointer;
-  }
-  .interactive-card:hover, .interactive-card:focus, .interactive-card:active {
-    transform: scale(1.035);
-    box-shadow: 0 8px 32px 0 rgba(75,31,167,0.13), 0 1.5px 8px 0 rgba(160,132,232,0.10);
-    border-color: #4b1fa7 !important;
-    z-index: 2;
-  }
-`}</style>
-      <div className="container py-5">
-        <div className="row justify-content-center">
-          <div className="col-lg-10">
-            {/* Header Section */}
-            <div className="text-center mb-5">
-              <div className="d-inline-block px-4 py-2 rounded-pill mb-3" style={{ background: 'linear-gradient(90deg, #a084e8 0%, #f3e8ff 100%)', color: '#4b1fa7', fontWeight: 600, fontSize: 18, boxShadow: '0 2px 12px rgba(160,132,232,0.10)' }}>
-                Hello!
-              </div>
-              <h1 className="fw-bold mb-3" style={{ fontSize: 48, color: '#222', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-                Your <span style={{ color: '#4b1fa7' }}>Life</span> Prediction
-              </h1>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">
+              🌟 Your Karmic Life Prediction
+            </h1>
+            <p className="text-xl opacity-90">
+              Born in {reportData.birthPlace} on {reportData.birthData?.dob}
+            </p>
+            <p className="text-lg opacity-80 mt-2">
+              Area of Focus: {reportData.lifeArea}
+            </p>
+          </div>
+        </div>
+      </div>
 
-            {/* Birth Details Cards */}
-            <div className="row g-4 mb-5">
-              <div className="col-md-3">
-                <div className="card interactive-card h-100 border-0 shadow-lg rounded-4" style={{ background: 'linear-gradient(135deg, #f8f7fa 0%, #ffffff 100%)', border: '2px solid #a084e8' }}>
-                  <div className="card-body text-center py-4">
-                    <div className="mb-2"><i className="bi bi-calendar-event" style={{ color: '#4b1fa7', fontSize: 28 }}></i></div>
-                    <div className="fw-bold text-dark mb-1">Birth Date</div>
-                    <div className="text-muted small">{formatDate(reportData.birthData.dob)}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="card interactive-card h-100 border-0 shadow-lg rounded-4" style={{ background: 'linear-gradient(135deg, #f8f7fa 0%, #ffffff 100%)', border: '2px solid #a084e8' }}>
-                  <div className="card-body text-center py-4">
-                    <div className="mb-2"><i className="bi bi-clock-history" style={{ color: '#4b1fa7', fontSize: 28 }}></i></div>
-                    <div className="fw-bold text-dark mb-1">Birth Time</div>
-                    <div className="text-muted small">{formatTime(reportData.birthData.tob)}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="card interactive-card h-100 border-0 shadow-lg rounded-4" style={{ background: 'linear-gradient(135deg, #f8f7fa 0%, #ffffff 100%)', border: '2px solid #a084e8' }}>
-                  <div className="card-body text-center py-4">
-                    <div className="mb-2"><i className="bi bi-geo-alt" style={{ color: '#4b1fa7', fontSize: 28 }}></i></div>
-                    <div className="fw-bold text-dark mb-1">Birth Place</div>
-                    <div className="text-muted small">{reportData.birthPlace}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="card interactive-card h-100 border-0 shadow-lg rounded-4" style={{ background: 'linear-gradient(135deg, #f8f7fa 0%, #ffffff 100%)', border: '2px solid #a084e8' }}>
-                  <div className="card-body text-center py-4">
-                    <div className="mb-2"><i className="bi bi-bullseye" style={{ color: '#4b1fa7', fontSize: 28 }}></i></div>
-                    <div className="fw-bold text-dark mb-1">Focus Area</div>
-                    <div className="text-muted small">{reportData.lifeArea}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Navigation Tabs */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex space-x-8">
+            <button
+              onClick={() => setActiveTab('report')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'report'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              📖 AI Prediction Report
+            </button>
+            <button
+              onClick={() => setActiveTab('charts')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'charts'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              📊 Birth Charts
+            </button>
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm ${
+                activeTab === 'chat'
+                  ? 'border-purple-500 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              💬 Ask Questions
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Chart Images */}
-            {reportData.chartImages && (
-              <div className="row mb-5 g-4">
-                <div className="col-lg-6">
-                  <div className="card interactive-card border-0 shadow-lg h-100 rounded-4" style={{ border: '2px solid #a084e8' }}>
-                    <div className="card-header bg-transparent border-0 pt-4 pb-2">
-                      <h5 className="mb-0 d-flex align-items-center text-dark fw-bold">
-                        <div className="bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
-                          <i className="bi bi-diagram-3 text-white small"></i>
-                        </div>
-                        Rasi Chart (D1) - Birth Chart
-                      </h5>
-                    </div>
-                    <div className="card-body text-center px-4 pb-4">
-                      <div className="position-relative">
-                        <img 
-                          src={reportData.chartImages.rasiChart} 
-                          alt="Rasi Chart"
-                          className="img-fluid rounded-4 border"
-                          style={{ maxHeight: '300px', border: '2px solid #a084e8' }}
-                        />
-                        <div className="position-absolute top-0 end-0 m-2">
-                          <span className="badge rounded-pill px-3 py-2" style={{ background: 'linear-gradient(90deg, #a084e8 0%, #4b1fa7 100%)', color: '#fff', fontWeight: 600 }}>D1</span>
-                        </div>
-                      </div>
-                      <p className="text-muted mt-3 mb-0 small">
-                        Shows planetary positions at time of birth
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-lg-6">
-                  <div className="card interactive-card border-0 shadow-lg h-100 rounded-4" style={{ border: '2px solid #a084e8' }}>
-                    <div className="card-header bg-transparent border-0 pt-4 pb-2">
-                      <h5 className="mb-0 d-flex align-items-center text-dark fw-bold">
-                        <div className="bg-success rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px' }}>
-                          <i className="bi bi-diagram-2 text-white small"></i>
-                        </div>
-                        Navamsha Chart (D9) - Soul Chart
-                      </h5>
-                    </div>
-                    <div className="card-body text-center px-4 pb-4">
-                      <div className="position-relative">
-                        <img 
-                          src={reportData.chartImages.navamshaChart} 
-                          alt="Navamsha Chart"
-                          className="img-fluid rounded-4 border"
-                          style={{ maxHeight: '300px', border: '2px solid #a084e8' }}
-                        />
-                        <div className="position-absolute top-0 end-0 m-2">
-                          <span className="badge rounded-pill px-3 py-2" style={{ background: 'linear-gradient(90deg, #4b1fa7 0%, #a084e8 100%)', color: '#fff', fontWeight: 600 }}>D9</span>
-                        </div>
-                      </div>
-                      <p className="text-muted mt-3 mb-0 small">
-                        Reveals deeper spiritual nature and marriage
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Jyotish Reading */}
-            <div className="card interactive-card border-0 shadow-lg mb-5 rounded-4" style={{ background: 'linear-gradient(135deg, #f8f7fa 0%, #ffffff 100%)', border: '2px solid #a084e8', padding: '2.5rem 2rem' }}>
-              <div className="card-header bg-transparent border-0 pt-4 pb-2 text-center">
-                <h2 className="mb-0 fw-bold" style={{
-                  fontSize: 38,
-                  background: 'linear-gradient(90deg, #4b1fa7 0%, #a084e8 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  letterSpacing: '0.5px',
-                  marginBottom: 24
-                }}>
-                  <i className="bi bi-stars me-2" style={{ color: '#ffd700', fontSize: 32, filter: 'drop-shadow(0 2px 8px #fffbe6)' }}></i>
-                  Your Personalized Jyotish Reading
-                </h2>
-              </div>
-              <div className="card-body px-4 pb-4">
-                {/* Overview Section */}
-                <div className="mb-5 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-primary bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-eye text-primary" style={{ fontSize: 22 }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Overview of Your Vedic Birth Chart</h4>
-                  </div>
-                  <p className="text-muted mb-0" style={{ lineHeight: '1.8', fontSize: '1.15rem' }}>
-                    Greetings! Your birth chart, cast in the mystical science of Jyotish or Vedic Astrology, offers profound insights into your karmic blueprint. Born under the Pisces ascendant (Lagna), your life is influenced deeply by Jupiter (Guru), the planet of wisdom and expansion. This positioning gives you a compassionate and introspective nature, coupled with a deep inclination towards spirituality.
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {activeTab === 'report' && (
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            {/* Report Header */}
+            <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-6 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    Your Personalized Life Prediction
+                  </h2>
+                  <p className="text-gray-600 mt-1">
+                    Generated using advanced AI with Vedic astrology and Western numerology
                   </p>
                 </div>
-
-                {/* Key Planetary Influences */}
-                <div className="mb-5 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-success bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-globe text-success" style={{ fontSize: 22 }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Key Planetary Influences</h4>
+                {reportData.aiReportMetadata?.generatedAt && (
+                  <div className="text-right text-sm text-gray-500">
+                    <p>Generated on</p>
+                    <p>{new Date(reportData.aiReportMetadata.generatedAt).toLocaleDateString()}</p>
                   </div>
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-primary mb-2">Lagna and Lagna Lord</h6>
-                          <p className="mb-0 small text-muted">As a Pisces ascendant, your life's path is significantly shaped by Jupiter. Currently positioned in your 7th house in Virgo, Jupiter's placement suggests a strong focus on partnerships and intellectual pursuits. The aspect of Jupiter on your ascendant infuses you with moral integrity and a philosophical outlook towards life.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-primary mb-2">Strongest Planets</h6>
-                          <p className="mb-0 small text-muted">Your chart shows a strong influence from Saturn and Moon, positioned together in the 5th house in Cancer. This conjunction indicates a deep emotional world and a serious approach towards life's pleasures and creativity. The influence of Saturn here could sometimes bring feelings of limitation or delay in matters of the heart and education.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-12">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-primary mb-2">Significant Yogas</h6>
-                          <ul className="mb-0 small text-muted">
-                            <li><strong>Gajakesari Yoga:</strong> Formed by Jupiter and Moon, this yoga blesses you with intelligence, wealth, and a noble disposition, enhancing your life significantly.</li>
-                            <li><strong>Adhi Yoga:</strong> Influenced by benefics in 6th, 7th, and 8th positions from the Moon, suggesting protection and success through life's adversities.</li>
-                          </ul>
-                          <p className="mt-2 mb-0 small text-muted">These combinations shape your personality to be generous, thoughtful, and resilient, with an innate capacity to overcome challenges gracefully.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Current Karmic Challenges */}
-                <div className="mb-5 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-warning bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-lightning text-warning" style={{ fontSize: 22 }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Current Karmic Challenges</h4>
-                  </div>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-warning mb-2">Karmic Patterns and Lessons</h6>
-                          <p className="mb-0 small text-muted">With Saturn in the 5th house, there's an indication of karmic lessons related to discipline, responsibility, and emotional maturity. Ketu in the 8th house in Libra points towards deep spiritual transformations often triggered by crisis or intense emotional experiences. This placement urges you to let go of material attachments and seek deeper truths.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-warning mb-2">Areas for Spiritual Growth</h6>
-                          <ul className="mb-0 small text-muted">
-                            <li>Your placements suggest a need to balance your emotional and spiritual worlds. Embracing practices that ground you and connect you with your inner wisdom (like meditation or journaling) will be beneficial.</li>
-                            <li>The presence of Ketu in the 8th house calls for exploration into metaphysical realms or psychology, providing insights into the hidden aspects of life and self.</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Current Cosmic Phase */}
-                <div className="mb-5 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-info bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-clock text-info" style={{ fontSize: 22 }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Current Cosmic Phase</h4>
-                  </div>
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-info mb-2">Planetary Periods (Dasha)</h6>
-                          <p className="mb-0 small text-muted">You are currently under the influence of the Sun Mahadasha and Saturn Antardasha. Sun, positioned in the 11th house, generally promises gains and fulfillment of desires. However, Saturn's influence could moderate these outcomes, introducing delays or challenges especially related to health and studies.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-info mb-2">Significant Transits</h6>
-                          <p className="mb-0 small text-muted">Jupiter's current transit through your 7th house can be a supportive period for educational growth but requires effort to overcome lethargy or lack of focus brought by Saturn's influence.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-4">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-info mb-2">Energetic Themes</h6>
-                          <p className="mb-0 small text-muted">This phase of your life is about balancing personal ambitions with your duties and responsibilities. Learning to manage your time and energy effectively will be crucial.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Guidance for Health and Studies */}
-                <div className="mb-5 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-danger bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                      <i className="bi bi-heart-pulse text-danger" style={{ fontSize: 22 }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Guidance for Health and Studies</h4>
-                  </div>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-danger mb-2">Health</h6>
-                          <p className="mb-0 small text-muted">Saturn's influence on your 5th house, which also impacts the mind, suggests that stress or mental strain could be affecting your physical well-being. Regular relaxation and mindfulness practices will be vital in maintaining your health.</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="card bg-light border-0">
-                        <div className="card-body p-3">
-                          <h6 className="fw-bold text-danger mb-2">Studies</h6>
-                          <p className="mb-0 small text-muted">The challenge in studies can be attributed to Saturn's aspect on your 5th house of intellect and education. Creating a structured schedule, setting realistic goals, and perhaps seeking a mentor or a guide in Jupiter's form can help alleviate these issues.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mystical Recommendations */}
-                <div className="mb-0 p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #ede9fe 0%, #fff 100%)', boxShadow: '0 2px 12px rgba(160,132,232,0.06)' }}>
-                  <div className="d-flex align-items-center mb-3">
-                    <div className="bg-purple bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px', backgroundColor: 'rgba(102, 16, 242, 0.1)' }}>
-                      <i className="bi bi-magic text-purple" style={{ fontSize: 22, color: '#6610f2' }}></i>
-                    </div>
-                    <h4 className="fw-bold text-dark mb-0" style={{ fontSize: 22 }}>Mystical Recommendations</h4>
-                  </div>
-                  <div className="card bg-gradient" style={{ background: 'linear-gradient(135deg, rgba(102, 16, 242, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)' }}>
-                    <div className="card-body p-3">
-                      <ul className="mb-0 small text-dark">
-                        <li><strong>Chant the Jupiter Mantra:</strong> "Om Brim Brihaspataye Namah" to enhance concentration and wisdom.</li>
-                        <li><strong>Saturn Remedies:</strong> Engage in service to others or offer donations to the needy on Saturdays to appease Saturn's harsher effects.</li>
-                      </ul>
-                      <p className="mt-3 mb-0 small text-muted fst-italic">Your journey is molded by the cosmic dance of the planets, each placement and aspect weaving the fabric of your destiny. Embrace the lessons they bring, for each challenge is an opportunity to grow deeper in wisdom and strength. Namaste!</p>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
-            {/* User Responses Summary */}
-            <div className="row mb-5">
-              <div className="col-md-4">
-                <div className="card interactive-card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-transparent border-0 pt-3 pb-2">
-                    <h6 className="mb-0 d-flex align-items-center text-dark fw-bold">
-                      <div className="bg-info rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                        <i className="bi bi-geo-alt text-white small"></i>
-                      </div>
-                      Birth Place Confirmed
-                    </h6>
-                  </div>
-                  <div className="card-body pt-0">
-                    <p className="mb-0 fw-semibold text-dark">{reportData.birthPlace}</p>
-                    <small className="text-muted">Location used for chart calculation</small>
-                  </div>
+            {/* AI-Generated Report Content */}
+            <div className="p-8">
+              {reportData.aiGeneratedkarmicreport ? (
+                <div className="prose prose-lg max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      h1: (props) => <h1 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-purple-200 pb-3" {...props} />,
+                      h2: (props) => <h2 className="text-2xl font-semibold text-purple-800 mb-4 mt-8" {...props} />,
+                      h3: (props) => <h3 className="text-xl font-semibold text-blue-700 mb-3 mt-6" {...props} />,
+                      p: (props) => <p className="text-gray-700 mb-4 leading-relaxed" {...props} />,
+                      ul: (props) => <ul className="list-disc list-inside text-gray-700 mb-4 space-y-2" {...props} />,
+                      li: (props) => <li className="leading-relaxed" {...props} />,
+                      strong: (props) => <strong className="font-semibold text-purple-700" {...props} />,
+                      em: (props) => <em className="italic text-blue-600" {...props} />
+                    }}
+                  >
+                    {reportData.aiGeneratedkarmicreport}
+                  </ReactMarkdown>
                 </div>
-              </div>
-              <div className="col-md-4">
-                <div className="card interactive-card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-transparent border-0 pt-3 pb-2">
-                    <h6 className="mb-0 d-flex align-items-center text-dark fw-bold">
-                      <div className="bg-warning rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                        <i className="bi bi-heart text-white small"></i>
-                      </div>
-                      Area of Focus
-                    </h6>
-                  </div>
-                  <div className="card-body pt-0">
-                    <p className="mb-0 fw-semibold text-dark">{reportData.lifeArea}</p>
-                    <small className="text-muted">Your current area of curiosity</small>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div className="card interactive-card border-0 shadow-sm h-100" style={{ borderRadius: '16px' }}>
-                  <div className="card-header bg-transparent border-0 pt-3 pb-2">
-                    <h6 className="mb-0 d-flex align-items-center text-dark fw-bold">
-                      <div className="bg-danger rounded-circle me-2 d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }}>
-                        <i className="bi bi-exclamation-triangle text-white small"></i>
-                      </div>
-                      Current Challenge
-                    </h6>
-                  </div>
-                  <div className="card-body pt-0">
-                    <p className="mb-0 fw-semibold text-dark">{reportData.challenge}</p>
-                    <small className="text-muted">Karmic pattern for growth</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Cross-Navigation */}
-            <div className="row g-4 mb-5">
-              <div className="col-md-6">
-                <div className="card interactive-card h-100 border-0 shadow-lg" style={{ 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  borderRadius: '24px'
-                }}>
-                  <div className="card-body text-center py-5">
-                    <div className="mb-4">
-                      <div className="bg-white bg-opacity-20 rounded-circle mx-auto d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px' }}>
-                        <div style={{ fontSize: '2.5rem' }}>⚡</div>
-                      </div>
-                    </div>
-                    <h4 className="text-white mb-3 fw-bold">Check Your Vibration</h4>
-                    <p className="text-white opacity-75 mb-4">Discover your current vibrational frequency and energy level</p>
-                    <button 
-                      className="btn btn-light btn-lg rounded-pill px-4 fw-medium"
-                      onClick={() => navigateToPath('vibrational')}
-                    >
-                      Measure Frequency
-                    </button>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="col-md-6">
-                <div className="card interactive-card h-100 border-0 shadow-lg" style={{ 
-                  background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-                  borderRadius: '24px'
-                }}>
-                  <div className="card-body text-center py-5">
-                    <div className="mb-4">
-                      <div className="bg-white bg-opacity-20 rounded-circle mx-auto d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px', fontSize: '2.5rem' }}>
-                        ✨
-                      </div>
-                    </div>
-                    <h4 className="text-white mb-3 fw-bold">Explore Your Aura</h4>
-                    <p className="text-white opacity-75 mb-4">Discover the colors and energies that surround your spirit</p>
-                    <button 
-                      className="btn btn-light btn-lg rounded-pill px-4 fw-medium"
-                      onClick={() => navigateToPath('aura')}
-                    >
-                      Reveal My Aura
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Cosmic Insight Box */}
-            <div className="card interactive-card border-0 shadow-lg mb-5" style={{
-              background: 'linear-gradient(135deg, rgba(111,66,193,0.1) 0%, rgba(139,92,246,0.1) 100%)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(111,66,193,0.2)',
-              borderRadius: '24px'
-            }}>
-              <div className="card-body text-center py-5">
-                <div className="mb-4">
-                  <div className="bg-primary bg-opacity-10 rounded-circle mx-auto d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px' }}>
-                    <i className="bi bi-stars text-primary" style={{ fontSize: '2rem' }}></i>
-                  </div>
-                </div>
-                <h3 className="mb-4 text-dark fw-bold">Cosmic Wisdom</h3>
-                <blockquote className="blockquote">
-                  <p className="mb-0 fs-5 fst-italic text-dark">
-                    "The stars impel, they do not compel. Your free will shapes your destiny, 
-                    while the cosmic energies provide the backdrop for your soul's evolution."
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🔮</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
+                    Report Generation in Progress
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Your personalized karmic report is being crafted by our AI. 
+                    Please check back in a few moments or try refreshing the page.
                   </p>
-                </blockquote>
-                <footer className="blockquote-footer mt-3 text-muted">
-                  <cite title="Source Title">Ancient Vedic Wisdom</cite>
-                </footer>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Refresh Report
+                  </button>
+                </div>
+              )}
+
+              {/* Report Metadata */}
+              {reportData.aiReportMetadata && (
+                <div className="mt-8 p-4 bg-gray-50 rounded-lg border">
+                  <h4 className="font-semibold text-gray-900 mb-2">Report Details</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p>🤖 Generated using: {reportData.aiReportMetadata.model || 'GPT-4o'}</p>
+                    {reportData.aiReportMetadata.tokensUsed && (
+                      <p>⚡ Processing power used: {reportData.aiReportMetadata.tokensUsed.toLocaleString()} tokens</p>
+                    )}
+                    <p>✨ Data sources: Vedic Astrology (50%) + Western Numerology (50%)</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'charts' && (
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Vedic Charts */}
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-100 to-red-100 p-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  🕉️ Vedic Astrology Charts
+                </h3>
+                <p className="text-gray-600">Traditional Jyotish analysis</p>
+              </div>
+              <div className="p-6 space-y-6">
+                {reportData.chartImages?.rasiChart && (
+                  <div>
+                    <h4 className="font-semibold mb-3">Rasi Chart (D1)</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={reportData.chartImages.rasiChart}
+                        alt="Rasi Chart"
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'block';
+                        }}
+                      />
+                      <div className="hidden p-4 text-center text-gray-500">
+                        Chart temporarily unavailable
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {reportData.chartImages?.navamshaChart && (
+                  <div>
+                    <h4 className="font-semibold mb-3">Navamsha Chart (D9)</h4>
+                    <div className="border rounded-lg overflow-hidden">
+                      <img
+                        src={reportData.chartImages.navamshaChart}
+                        alt="Navamsha Chart"
+                        className="w-full h-auto"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          ((e.target as HTMLImageElement).nextSibling as HTMLElement).style.display = 'block';
+                        }}
+                      />
+                      <div className="hidden p-4 text-center text-gray-500">
+                        Chart temporarily unavailable
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="text-center pb-5">
-              <div className="d-flex gap-3 justify-content-center flex-wrap">
-                <button className="btn btn-lg px-5 py-3" 
-                        style={{ 
-                          background: 'linear-gradient(135deg, #4b1fa7 0%, #8b5cf6 100%)', 
-                          border: 'none', 
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: 18,
-                          borderRadius: 12
-                        }} 
-                        onClick={() => window.print()}>
-                  <i className="bi bi-download me-2"></i>
-                  Download Reading
-                </button>
-                <button className="btn btn-lg px-5 py-3" 
-                        style={{ 
-                          borderColor: '#4b1fa7', 
-                          color: '#4b1fa7', 
-                          fontWeight: 600,
-                          fontSize: 18,
-                          borderRadius: 12,
-                          border: '2px solid #4b1fa7'
-                        }} 
-                        onClick={() => navigate('/onboarding-one')}>
-                  <i className="bi bi-arrow-left me-2"></i>
-                  Explore Other Paths
-                </button>
-                <button className="btn btn-lg px-5 py-3" 
-                        style={{ 
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
-                          border: 'none', 
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: 18,
-                          borderRadius: 12
-                        }} 
-                        onClick={() => navigate('/report-chat')}>
-                  <i className="bi bi-chat-dots me-2"></i>
-                  Ask AI About Results
-                </button>
-                <button className="btn btn-lg px-5 py-3" 
-                        style={{ 
-                          background: 'linear-gradient(135deg, #10b981 0%, #4b1fa7 100%)', 
-                          border: 'none', 
-                          color: 'white',
-                          fontWeight: 600,
-                          fontSize: 18,
-                          borderRadius: 12
-                        }} 
-                        onClick={() => window.location.href = `mailto:?subject=My Jyotish Reading&body=Check out my personalized Jyotish reading from Eternal AI!`}>
-                  <i className="bi bi-share me-2"></i>
-                  Share Reading
-                </button>
+            {/* Western Numerology */}
+            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-100 to-purple-100 p-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  🔢 Western Numerology
+                </h3>
+                <p className="text-gray-600">Core numbers and meanings</p>
+              </div>
+              <div className="p-6">
+                {reportData.rapidApi && (
+                  <div className="space-y-4">
+                    {/* Life Path Number */}
+                    {reportData.rapidApi.life_path_number && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-semibold text-blue-800 mb-2">
+                          Life Path Number: {reportData.rapidApi.life_path_number.result}
+                        </h4>
+                        <p className="text-gray-700 text-sm">
+                          {reportData.rapidApi.life_path_number.meaning}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Destiny Number */}
+                    {reportData.rapidApi.destiny_number && (
+                      <div className="p-4 bg-purple-50 rounded-lg">
+                        <h4 className="font-semibold text-purple-800 mb-2">
+                          Destiny Number: {reportData.rapidApi.destiny_number.result}
+                        </h4>
+                        <p className="text-gray-700 text-sm">
+                          {reportData.rapidApi.destiny_number.meaning}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Soul Urge Number */}
+                    {reportData.rapidApi.soul_urge_number && (
+                      <div className="p-4 bg-indigo-50 rounded-lg">
+                        <h4 className="font-semibold text-indigo-800 mb-2">
+                          Soul Urge Number: {reportData.rapidApi.soul_urge_number.result}
+                        </h4>
+                        <p className="text-gray-700 text-sm">
+                          {reportData.rapidApi.soul_urge_number.meaning}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Challenge Number */}
+                    {reportData.challenge && (
+                      <div className="p-4 bg-red-50 rounded-lg">
+                        <h4 className="font-semibold text-red-800 mb-2">
+                          Challenge Number: {reportData.challenge}
+                        </h4>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'chat' && (
+          <div className="max-w-4xl mx-auto">
+            <KarmicReportChat userData={reportData} />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gray-100 py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-gray-600">
+            ✨ Your karmic journey is unique. Use these insights as guidance for your personal growth.
+          </p>
+          <button
+            onClick={() => navigate('/chat')}
+            className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Continue Your Spiritual Journey
+          </button>
         </div>
       </div>
     </div>

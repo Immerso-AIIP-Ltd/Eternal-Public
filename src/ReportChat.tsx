@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from './firebase/config';
-import { chatWithReports } from './services/gpt';
+import { generateReportWithVision, generateTextOnlyReport } from './services/gpt';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
@@ -128,7 +128,7 @@ What would you like to know about your spiritual journey?`;
       };
 
       // Call GPT service with report context
-      const aiResponse = await chatWithReports(message.trim(), context, currentUser?.uid);
+      const aiResponse = await generateTextOnlyReport(message.trim(), process.env.REACT_APP_OPENAI_API_KEY || ''); // Provide your OpenAI API key here
       
       setMessages(prev => [...prev, { 
         role: 'assistant', 
