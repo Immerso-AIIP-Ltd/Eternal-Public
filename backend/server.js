@@ -41,5 +41,41 @@ app.post('/api/openai', async (req, res) => {
   }
 });
 
+// Add a /api/gpt4vision endpoint for compatibility with the React frontend
+app.post('/api/gpt4vision', async (req, res) => {
+  // You can log the incoming data for debugging
+  console.log('Received /api/gpt4vision request:', req.body);
+
+  // Simulate a delay and return a mock response
+  setTimeout(() => {
+    res.json({
+      overallScore: 87,
+      faceAnalysis: {
+        dominantTraits: ["Leadership", "Creativity", "Empathy"],
+        personality: "Intuitive and compassionate with strong leadership qualities",
+        lifePhase: "Growth & Expansion",
+        energyLevel: "High"
+      },
+      palmAnalysis: {
+        lifeLine: "Strong and clear - indicates vitality and good health",
+        heartLine: "Deep and curved - passionate and emotional nature",
+        headLine: "Long and straight - analytical and practical thinking",
+        destinyPath: "Success through creative endeavors and helping others"
+      },
+      compatibility: {
+        bestMatches: ["Earth signs", "Water signs"],
+        challenges: ["Overthinking", "Perfectionism"],
+        recommendations: ["Meditation", "Creative expression", "Nature connection"]
+      },
+      predictions: {
+        career: "Breakthrough in creative field within 6 months",
+        relationships: "Deep connection forming in the near future",
+        health: "Focus on work-life balance recommended",
+        spiritual: "Awakening to higher purpose"
+      }
+    });
+  }, 2000); // Simulate 2s delay
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`OpenAI proxy server running on port ${PORT}`)); 

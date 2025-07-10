@@ -21,12 +21,33 @@ import HomeScreen from './HomeScreen';
 import ComingSoon from './ComingSoon';
 import NumerologyApiDebug from './NumerologyApiDebug';
 import NumerologyApiFullDebug from './NumerologyApiFullDebug';
+import AstroScanLanding from './AstroScanLanding';
+import UploadReportImages from "./UploadReportImages";
+import FacePalmReport from "./FacePalmReport";
+
+function Home() {
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+      <h1 className="text-4xl font-bold mb-8">Welcome to Eternal</h1>
+      <button
+        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl text-lg font-semibold"
+        onClick={() => navigate("/astroscan")}
+      >
+        Face
+      </button>
+    </div>
+  );
+}
 
 function App() {
   return (
     <Router>                                 
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/astroscan" element={<AstroScanLanding />} />
+        <Route path="/upload-report-images" element={<UploadReportImages />} />
+        <Route path="/face-palm-report" element={<FacePalmReport />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/profile-creation" element={<ProfileCreation />} />
